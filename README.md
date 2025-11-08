@@ -22,8 +22,8 @@ The system helps organizations manage employees, attendance, payroll, leave requ
 | Layer | Technology |
 |-------|-------------|
 | Backend | Laravel 11 (PHP 8.2+) |
-| Frontend | Blade / Livewire / Filament |
-| Database | MySQL or PostgreSQL |
+| Frontend | Blade / Livewire / Tailwind |
+| Database | MySQL 
 | Caching | Redis |
 | Deployment | Laravel Cloud |
 | Version Control | GitHub |

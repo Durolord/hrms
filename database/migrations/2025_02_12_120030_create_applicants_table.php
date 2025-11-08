@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('phone');
             $table->string('email');
-            $table->string('cv');
+            $table->string('cv')->nullable();
             $table->string('avatar')->nullable();
             $table->foreignId('opening_id')->constrained();
             $table->string('status')->default('Applied');

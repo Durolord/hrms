@@ -25,6 +25,8 @@ class DatabaseSeeder extends Seeder
             LeaveSeeder::class,
             SalesDevelopmentOpeningSeeder::class,
             BankSeeder::class,
+            OpeningSeeder::class,
+            ApplicantSeeder::class,
         ]);
     }
 }

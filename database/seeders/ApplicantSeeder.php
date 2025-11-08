@@ -2,30 +2,42 @@
 
 namespace Database\Seeders;
 
+use Illuminate\Database\Seeder;
 use App\Models\Applicant;
 use App\Models\Opening;
 use Faker\Factory as Faker;
-use Illuminate\Database\Seeder;
 
 class ApplicantSeeder extends Seeder
 {
     public function run()
     {
         $faker = Faker::create();
+
+        // Ensure there are openings to attach applicants to
+        $openingIds = Opening::pluck('id')->toArray();
+
+        if (empty($openingIds)) {
+            Opening::factory()->count(5)->create();
+            $openingIds = Opening::pluck('id')->toArray();
+        }
+
         $openings = Opening::all();
-        $avatarFileName = '1729505473_nd.jpg';
-        $cvFileName = "1729505473_Temitope Ojo's certificate.pdf";
+
+        // For each opening create a random number of applicants
         foreach ($openings as $opening) {
-            for ($i = 0; $i < rand(5, 15); $i++) {
+            $count = rand(5, 15);
+
+            for ($i = 0; $i < $count; $i++) {
                 Applicant::create([
                     'opening_id' => $opening->id,
-                    'branch_id' => $opening->branch_id,
+                    // 'branch_id' => $opening->branch_id ?? null,
                     'name' => $faker->name,
                     'email' => $faker->unique()->safeEmail,
                     'phone' => $faker->phoneNumber,
-                    'avatar' => 'avatars/'.$avatarFileName,
-                    'cv' => 'cvs/'.$cvFileName,
-                    'status' => $faker->randomElement(['Applied']),
+                    'avatar' => null,
+                    'cv' => null,
+                    'status' => 'Applied',
+                    'job_status' => $faker->randomElement(['Employed', 'Unemployed']),
                 ]);
             }
         }

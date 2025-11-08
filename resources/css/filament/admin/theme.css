@@ -1,0 +1,30 @@
+@import '/vendor/filament/filament/resources/css/theme.css';
+
+@config 'tailwind.config.js';
+
+.fi-body {
+    background-image: url('/images/bg.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100vh;
+    color: white;
+    position: relative;
+    z-index: 0;
+}
+
+/* Overlay */
+.fi-body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.7); /* Light mode overlay */
+    z-index: -1;
+}
+
+/* For dark mode support */
+body.dark .fi-body::before,
+.dark .fi-body::before {
+    background: rgba(5, 10, 25, 0.8); /* Deeper, more muted overlay for dark mode */
+}

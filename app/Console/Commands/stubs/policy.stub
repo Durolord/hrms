@@ -1,0 +1,19 @@
+<?php
+
+namespace {{ namespace }};
+
+use App\Models\User;
+use {{ modelClass }};
+use Illuminate\Auth\Access\HandlesAuthorization;
+
+class {{ model }}Policy
+{
+    use HandlesAuthorization;
+
+    public static $model = {{ model }}::class;
+
+{{ standardMethods }}
+
+    // Special Permissions
+{{ specialMethods }}
+}

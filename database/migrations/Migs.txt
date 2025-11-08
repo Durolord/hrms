@@ -1,0 +1,396 @@
+<?
+
+
+{
+    Schema::create('users', function (Blueprint $table) {
+        $table->id();
+        $table->string('name');
+        $table->string('email')->unique();
+        $table->timestamp('email_verified_at')->nullable();
+        $table->string('password');
+        $table->rememberToken();
+        $table->timestamps();
+    });
+
+}
+
+{
+    Schema::create('departments', function (Blueprint $table) {
+        $table->id();
+        $table->string('name');
+        $table->boolean('status')->default(true);
+        $table->softDeletes();
+        $table->timestamps();
+    });
+}
+
+
+
+{
+    Schema::create('branches', function (Blueprint $table) {
+        $table->id();
+        $table->string('name');
+        $table->string('address')->nullable();
+        $table->string('phone')->nullable();
+        $table->boolean('status')->default(true);
+        $table->softDeletes();
+        $table->timestamps();
+    });
+}
+
+
+
+{
+    Schema::create('skills', function (Blueprint $table) {
+        $table->id();
+        $table->string('name');
+        $table->string('description')->nullable();
+        $table->boolean('status')->default(true);
+        $table->timestamps();
+    });
+}
+
+
+
+{
+    Schema::create('leave_types', function (Blueprint $table) {
+        $table->id();
+        $table->string('name');
+        $table->string('description')->nullable();
+        $table->decimal('deduction_amount', 15, 2)->default(0.00);
+        $table->integer('max_days')->default(30);
+        $table->boolean('is_percentage')->default(false);
+        $table->timestamps();
+    });
+}
+
+
+
+{
+    Schema::create('pay_scales', function (Blueprint $table) {
+        $table->id();
+        $table->string('name')->unique(); // Name of the pay scale (e.g., Junior, Senior)
+        $table->decimal('basic_salary', 15, 2); // Base salary
+        $table->boolean('active')->default(true); 
+        $table->timestamps();
+    });
+}
+
+
+
+{
+    Schema::create('designations', function (Blueprint $table) {
+        $table->id();;
+        $table->string('name');
+        // $table->foreignId('department_id')->constrained();
+        $table->foreignId('pay_scale_id')->constrained();
+        // $table->integer('probation_duration')->default(3);
+        $table->boolean('status')->default(true);
+        $table->softDeletes();
+        $table->timestamps();
+    });
+}
+
+
+
+{
+    Schema::create('employees', function (Blueprint $table) {
+        $table->id();
+        $table->string('name');
+        $table->string('email')->unique();
+        $table->string('phone')->nullable();
+        $table->date('employment_start_date');
+        $table->boolean('active')->default(true);
+        $table->foreignId('user_id')->constrained()->onDelete('cascade');
+        $table->foreignId('department_id')->constrained();
+        $table->foreignId('designation_id')->constrained();
+        // $table->foreignId('pay_scale_id')->nullable()->constrained();
+        $table->foreignId('branch_id')->constrained();
+        $table->foreignId('manager_id')->nullable()->constrained('employees');
+        $table->softDeletes();
+        $table->timestamps();
+    });
+}
+
+
+
+{
+    Schema::create('leaves', function (Blueprint $table) {
+        $table->id();
+        $table->date('start_date');
+        $table->date('end_date');
+        $table->date('approved_on')->nullable();
+        $table->enum('status', ['Pending', 'Approved', 'Rejected'])->default('Pending');
+        $table->boolean('deducted_from_payroll')->default(false);
+        $table->integer('max_days')->default(20);
+        $table->foreignId('employee_id')->constrained();
+        $table->foreignId('leave_type_id')->constrained();
+        $table->foreignId('approver_id')->nullable()->constrained('users');
+        $table->timestamps();
+    });
+}
+
+
+
+{
+    Schema::create('attendances', function (Blueprint $table) {
+        $table->id();
+        $table->date('date');
+        $table->timestamp('time_in');
+        $table->timestamp('time_out')->nullable();
+        $table->timestamp('break_start')->nullable();
+        $table->timestamp('break_end')->nullable();
+        $table->foreignId('employee_id')->constrained();
+        $table->timestamps();
+    });
+}
+
+
+
+{
+    Schema::create('bonuses', function (Blueprint $table) {
+        $table->id();
+        $table->foreignId('employee_id')->constrained()->cascadeOnDelete();
+        $table->decimal('amount', 15, 2);
+        $table->date('month');
+        $table->text('reason');
+        $table->boolean('is_percentage')->default(false);
+        $table->timestamps();
+    });
+}
+
+
+
+{
+    Schema::create('deductions', function (Blueprint $table) {
+        $table->id();
+        $table->foreignId('employee_id')->constrained()->cascadeOnDelete();
+        $table->decimal('amount', 15, 2);
+        $table->date('month');
+        $table->boolean('is_percentage')->default(false);
+        $table->text('reason');
+        $table->timestamps();
+    });
+}
+
+
+
+{
+    Schema::create('allowances', function (Blueprint $table) {
+        $table->id();
+        $table->foreignId('pay_scale_id')->constrained()->onDelete('cascade');
+        $table->decimal('amount', 15, 2);
+        // $table->date('month');
+        $table->boolean('is_percentage')->default(false);
+        $table->string('reason')->nullable();
+        $table->timestamps();
+    });
+}
+
+
+
+{
+    Schema::create('payrolls', function (Blueprint $table) {
+        $table->id();
+        $table->foreignId('employee_id')->constrained();
+        $table->date('month');
+        $table->decimal('basic_salary', 18, 2);
+        $table->enum('status', ['Pending', 'Approved', 'Paid'])->default('Pending');
+        $table->timestamps();
+    });
+}
+
+
+
+{
+    Schema::create('employee_skill', function (Blueprint $table) {
+        $table->id();
+        $table->foreignId('employee_id')->constrained()->onDelete('cascade');
+        $table->foreignId('skill_id')->constrained()->onDelete('cascade');
+        $table->timestamps();
+    });
+}
+
+
+
+{
+    Schema::create('attendance_summaries', function (Blueprint $table) {
+        $table->id();
+        $table->date('date')->unique();
+        $table->integer('total_attendances')->default(0);
+        $table->timestamps();
+    });
+}
+
+
+
+{
+    Schema::create('payroll_allowance_snapshots', function (Blueprint $table) {
+        $table->id();
+        $table->foreignId('payroll_id')->constrained();
+        $table->foreignId('allowance_id')->constrained();
+        $table->foreignId('pay_scale_id')->constrained()->nullable();
+        $table->string('name')->nullable();
+        $table->decimal('amount', 15, 2);
+        $table->timestamps();
+    });
+}
+
+
+
+{
+    Schema::create('qualifications', function (Blueprint $table) {
+        $table->id();
+        $table->string('description');
+        $table->timestamps();
+    });
+}
+
+
+
+{
+    Schema::create('responsibilities', function (Blueprint $table) {
+        $table->id();
+        $table->string('description');
+        $table->timestamps();
+    });
+}
+
+{
+    Schema::create('notifications', function (Blueprint $table) {
+        $table->uuid('id')->primary();
+        $table->string('type');
+        $table->morphs('notifiable');
+        $table->text('data');
+        $table->timestamp('read_at')->nullable();
+        $table->timestamps();
+    });
+}
+
+
+
+{
+    Schema::create('department_heads', function (Blueprint $table) {
+        $table->id();
+        $table->foreignId('department_id')->constrained()->onDelete('cascade');
+        $table->foreignId('branch_id')->constrained()->onDelete('cascade');
+        $table->foreignId('employee_id')->constrained()->onDelete('cascade');
+        $table->timestamps();
+    });
+}
+
+
+
+{
+    Schema::create('openings', function (Blueprint $table) {
+        $table->id();
+        $table->string('title');
+        $table->text('description')->nullable();
+        $table->foreignId('department_id')->constrained();
+        $table->foreignId('designation_id')->constrained();
+        $table->foreignId('branch_id')->constrained();
+        $table->boolean('active')->default(true);
+        $table->timestamps();
+    });
+}
+
+
+
+{
+    Schema::create('opening_responsibility', function (Blueprint $table) {
+        $table->id();
+        $table->foreignId('opening_id')->constrained()->onDelete('cascade');
+        $table->foreignId('responsibility_id')->constrained()->onDelete('cascade');
+        $table->timestamps();
+    });
+}
+
+
+
+{
+    Schema::create('opening_qualification', function (Blueprint $table) {
+        $table->id();
+        $table->foreignId('opening_id')->constrained()->onDelete('cascade');
+        $table->foreignId('qualification_id')->constrained()->onDelete('cascade');
+        $table->timestamps();
+    });
+}
+
+
+
+{
+    Schema::create('applicants', function (Blueprint $table) {
+        $table->id();
+        $table->string('name');
+        $table->string('phone');
+        $table->string('email');
+        $table->string('cv');  // CV file path
+        $table->string('avatar')->nullable();  // Optional avatar image
+        $table->foreignId('opening_id')->constrained();
+        $table->string('status')->default('Applied');
+        $table->enum('job_status', ['Employed', 'Unemployed'])->default('Unemployed');
+        $table->timestamps();
+    });
+}
+
+
+
+
+{
+    Schema::create('opening_skill', function (Blueprint $table) {
+        $table->id();
+        $table->foreignId('opening_id')->constrained()->onDelete('cascade');
+        $table->foreignId('skill_id')->constrained()->onDelete('cascade');
+        $table->unique(['opening_id', 'skill_id']);
+        $table->timestamps();
+    });
+}
+
+
+
+
+{
+    Schema::create('payroll_deduction_snapshots', function (Blueprint $table) {
+        $table->id();
+        $table->foreignId('payroll_id')->constrained()->onDelete('cascade');
+        $table->foreignId('deduction_id')->constrained()->onDelete('cascade');
+        $table->string('name');
+        $table->decimal('amount', 15, 2);
+        $table->timestamps();
+    });
+}
+
+
+
+{
+    Schema::create('payroll_bonus_snapshots', function (Blueprint $table) {
+         $table->id();
+        $table->foreignId('payroll_id')->constrained()->onDelete('cascade');
+        $table->foreignId('bonus_id')->constrained()->onDelete('cascade');
+        $table->string('name');
+        $table->decimal('amount', 15, 2);
+        $table->timestamps();
+    });
+}
+
+
+
+{
+    Schema::create('banks', function (Blueprint $table) {
+        $table->id();
+        $table->string('name');
+        $table->string('code')->unique()->nullable();
+        $table->timestamps();
+    });
+}
+
+
+{
+    Schema::table('employees', function (Blueprint $table) {
+        $table->foreignId('bank_id')->nullable()->constrained('banks')->nullOnDelete();
+        $table->string('account_number')->nullable();
+    });
+}
+
+
+

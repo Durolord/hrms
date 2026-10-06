@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Auth;
 
 class PayrollSummaryChartWidget extends LineChartWidget
 {
+    protected static ?int $sort = 3;
+
     use HasWidgetShield;
 
     protected static ?string $heading = 'Payroll Financials Over Time';

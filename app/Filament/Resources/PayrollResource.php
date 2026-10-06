@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Exports\PayrollExporter;
 use App\Filament\Resources\PayrollResource\Pages;
 use App\Models\Payroll;
+use App\Services\BankTransferFile;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Coolsam\FilamentFlatpickr\Forms\Components\Flatpickr;
 use Filament\Actions\Exports\Enums\ExportFormat;
@@ -12,6 +13,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Infolists;
 use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -217,6 +219,16 @@ class PayrollResource extends Resource implements HasShieldPermissions
                     ->sortable()
                     ->formatStateUsing(fn ($state) => $state ? '₦ '.number_format($state, 2) : '₦ 0.00')
                     ->toggleable(),
+                Tables\Columns\TextColumn::make('change_vs_previous')
+                    ->label('vs last month')
+                    ->getStateUsing(function (Payroll $record) {
+                        $previous = $record->previousPayroll();
+
+                        return $previous ? $record->net_salary - $previous->net_salary : null;
+                    })
+                    ->formatStateUsing(fn ($state) => $state === null ? '-' : ($state >= 0 ? '+' : '-').' ₦ '.number_format(abs($state), 2))
+                    ->color(fn ($state) => $state === null || $state == 0 ? 'gray' : ($state > 0 ? 'success' : 'danger'))
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('status')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
@@ -257,11 +269,47 @@ class PayrollResource extends Resource implements HasShieldPermissions
             ])
             ->modifyQueryUsing(function (Builder $query) {
                 if (! auth()->user()->can('view_outside_branch_employee')) {
-                    return $query->join('employees', 'payrolls.employee_id', '=', 'employees.id')
-                        ->where('employees.branch_id', auth()->user()->employee->branch->id);
+                    return $query->select('payrolls.*')->join('employees', 'payrolls.employee_id', '=', 'employees.id')
+                        ->where('employees.branch_id', auth()->user()->employee?->branch?->id);
                 }
             })
             ->headerActions([
+                Tables\Actions\Action::make('bankTransfer')
+                    ->label('Bank transfer file')
+                    ->icon('heroicon-o-banknotes')
+                    ->visible(fn () => auth()->user()->can('generatePayslip_payroll'))
+                    ->form([
+                        Forms\Components\Select::make('month')
+                            ->label('Payroll month')
+                            ->options(collect(range(0, 11))->mapWithKeys(fn ($i) => [now()->subMonths($i)->format('Y-m') => now()->subMonths($i)->format('F Y')]))
+                            ->default(now()->format('Y-m'))
+                            ->required(),
+                    ])
+                    ->modalDescription('Includes Approved payrolls only. Employees without bank details are left out.')
+                    ->action(function (array $data) {
+                        $file = app(BankTransferFile::class)->build($data['month']);
+                        if (count($file['rows']) === 1) {
+                            Notification::make()->title('No approved payrolls with bank details for that month.')->warning()->send();
+
+                            return null;
+                        }
+                        if ($file['skipped']) {
+                            Notification::make()
+                                ->title(count($file['skipped']).' employee(s) left out: no bank details')
+                                ->body(implode(', ', $file['skipped']))
+                                ->warning()
+                                ->persistent()
+                                ->send();
+                        }
+
+                        return response()->streamDownload(function () use ($file) {
+                            $out = fopen('php://output', 'w');
+                            foreach ($file['rows'] as $row) {
+                                fputcsv($out, array_map([BankTransferFile::class, 'safeCell'], $row));
+                            }
+                            fclose($out);
+                        }, $file['filename'], ['Content-Type' => 'text/csv']);
+                    }),
                 Tables\Actions\ExportAction::make()
                     ->exporter(PayrollExporter::class)
                     ->label('Export All')

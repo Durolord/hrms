@@ -56,7 +56,7 @@ class ShowOpening extends Component
         }
         $avatarPath = $this->avatar->store('avatars', 'public');
         $cvPath = $this->cv->store('cvs', 'public');
-        Applicant::create([
+        $applicant = Applicant::create([
             'name' => $this->name,
             'email' => $this->email,
             'phone' => $this->phone,
@@ -65,6 +65,7 @@ class ShowOpening extends Component
             'job_status' => $this->job_status,
             'opening_id' => $this->opening->id,
         ]);
+        $applicant->sendConfirmation();
         Notification::make()
             ->title('Application Submitted')
             ->body('Thank you for applying! Our team will review your application.')

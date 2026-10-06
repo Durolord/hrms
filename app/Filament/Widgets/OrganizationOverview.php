@@ -14,6 +14,8 @@ use Spatie\Activitylog\Models\Activity;
 
 class OrganizationOverview extends BaseWidget
 {
+    protected static ?int $sort = 1;
+
     use HasWidgetShield;
 
     protected ?string $heading = 'Organization Overview';

@@ -13,7 +13,7 @@ class EmployeeStatsWidget extends BaseWidget
         $user = auth()->user();
         $employeeQuery = Employee::query();
         if (! $user->can('view_outside_branch_employee')) {
-            $employeeQuery->where('branch_id', $user->employee->branch->id);
+            $employeeQuery->where('branch_id', $user->employee?->branch?->id);
         }
 
         return [

@@ -56,6 +56,12 @@ return [
     |
     */
     'timezone' => env('APP_TIMEZONE', 'UTC'),
+
+    /*
+    | Public demo mode: pre-fills the login form with seeded demo credentials,
+    | shows a banner, and enables the scheduled demo:reset command.
+    */
+    'demo' => (bool) env('DEMO_MODE', false),
     /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration

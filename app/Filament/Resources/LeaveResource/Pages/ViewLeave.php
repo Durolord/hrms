@@ -4,9 +4,8 @@ namespace App\Filament\Resources\LeaveResource\Pages;
 
 use App\Filament\Resources\LeaveResource;
 use App\Models\Leave;
-use App\Models\User;
 use Filament\Actions;
-use Filament\Notifications\Notification;
+use Filament\Forms\Components\Textarea;
 use Filament\Resources\Pages\ViewRecord;
 
 class ViewLeave extends ViewRecord
@@ -20,77 +19,35 @@ class ViewLeave extends ViewRecord
                 ->tooltip('Approve')
                 ->icon('heroicon-o-check')
                 ->color('success')
-                ->action(fn (Leave $record) => self::approveLeave($record))
+                ->requiresConfirmation()
+                ->action(function (Leave $record) {
+                    $record->approve(auth()->user());
+                    $this->refreshFormData(['status', 'approver_id', 'approved_on']);
+                })
                 ->visible(fn (Leave $record) => auth()->user()->canApproveLeave($record) && $record->status === 'Pending'),
             Actions\Action::make('reject')
                 ->tooltip('Reject')
                 ->icon('heroicon-o-x-circle')
                 ->color('danger')
-                ->action(fn (Leave $record) => self::rejectLeave($record))
+                ->form([
+                    Textarea::make('rejection_reason')->label('Reason')->required(),
+                ])
+                ->action(function (Leave $record, array $data) {
+                    $record->reject(auth()->user(), $data['rejection_reason']);
+                    $this->refreshFormData(['status', 'approver_id', 'approved_on', 'rejection_reason']);
+                })
                 ->visible(fn (Leave $record) => auth()->user()->canApproveLeave($record) && $record->status === 'Pending'),
+            Actions\Action::make('cancel')
+                ->label('Cancel request')
+                ->icon('heroicon-o-trash')
+                ->color('gray')
+                ->requiresConfirmation()
+                ->action(function (Leave $record) {
+                    $record->delete();
+                    $this->redirect(LeaveResource::getUrl('index'));
+                })
+                ->visible(fn (Leave $record) => $record->status === 'Pending'
+                    && $record->employee->user_id === auth()->id()),
         ];
-    }
-
-    private static function approveLeave(Leave $record)
-    {
-        $record->update([
-            'status' => 'Approved',
-            'approved_on' => now(),
-            'approver_id' => auth()->id(),
-        ]);
-        if ($record->employee->user) {
-            Notification::make()
-                ->title('Leave Approved')
-                ->body('Your '.strtolower($record->leave_type->name)." request from {$record->start_date->format('d M Y')} to {$record->end_date->format('d M Y')} has been approved.")
-                ->success()
-                ->sendToDatabase($record->employee->user);
-        }
-        $approver = auth()->user();
-        if ($approver && $approver->hasRole('Admin')) {
-            User::role('Admin')->each(fn ($admin) => Notification::make()
-                ->title('Leave Approved for Subordinate')
-                ->body('The '.strtolower($record->leave_type->name)." request from {$record->start_date->format('d M Y')} to {$record->end_date->format('d M Y')} has been approved for {$record->employee->name}.")
-                ->success()
-                ->sendToDatabase($admin));
-        } else {
-            if ($record->employee->manager && $record->employee->manager->user) {
-                Notification::make()
-                    ->title('Leave Approved for Subordinate')
-                    ->body('The '.strtolower($record->leave_type->name)." request from {$record->start_date->format('d M Y')} to {$record->end_date->format('d M Y')} has been approved for {$record->employee->name}.")
-                    ->success()
-                    ->sendToDatabase($record->employee->manager->user);
-            }
-        }
-    }
-
-    private static function rejectLeave(Leave $record)
-    {
-        $record->update([
-            'status' => 'Rejected',
-            'approver_id' => auth()->id(),
-        ]);
-        if ($record->employee->user) {
-            Notification::make()
-                ->title('Leave Rejected')
-                ->body('Your '.strtolower($record->leave_type->name)." request from {$record->start_date->format('d M Y')} to {$record->end_date->format('d M Y')} has been rejected.")
-                ->danger()
-                ->sendToDatabase($record->employee->user);
-        }
-        $approver = auth()->user();
-        if ($approver && $approver->hasRole('Admin')) {
-            User::role('Admin')->each(fn ($admin) => Notification::make()
-                ->title('Leave Rejected for Subordinate')
-                ->body('The '.strtolower($record->leave_type->name)." request from {$record->start_date->format('d M Y')} to {$record->end_date->format('d M Y')} has been rejected for {$record->employee->name}.")
-                ->danger()
-                ->sendToDatabase($admin));
-        } else {
-            if ($record->employee->manager && $record->employee->manager->user) {
-                Notification::make()
-                    ->title('Leave Rejected for Subordinate')
-                    ->body('The '.strtolower($record->leave_type->name)." request from {$record->start_date->format('d M Y')} to {$record->end_date->format('d M Y')} has been rejected for {$record->employee->name}.")
-                    ->danger()
-                    ->sendToDatabase($record->employee->manager->user);
-            }
-        }
     }
 }

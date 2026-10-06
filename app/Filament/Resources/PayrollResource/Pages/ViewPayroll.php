@@ -68,11 +68,11 @@ class ViewPayroll extends ViewRecord
             if (! $this->regeneratePayroll($payroll)) {
                 return;
             }
-            $payroll->status = 'Approved';
-            $message = 'Payroll successfully regenerated and status updated to Approved.';
+            $payroll->refresh()->markApproved();
+            $message = 'Payroll successfully regenerated and approved. The payslip has been emailed to the employee.';
         } elseif ($payroll->status === 'Approved') {
-            $payroll->status = 'Paid';
-            $message = 'Payroll status updated to Paid.';
+            $payroll->markPaid();
+            $message = 'Payroll marked as Paid.';
         } else {
             Notification::make()
                 ->title('Payroll is already Paid.')
@@ -81,7 +81,6 @@ class ViewPayroll extends ViewRecord
 
             return;
         }
-        $payroll->save();
         Notification::make()
             ->title($message)
             ->success()

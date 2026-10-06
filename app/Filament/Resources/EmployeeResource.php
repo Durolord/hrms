@@ -170,27 +170,31 @@ class EmployeeResource extends Resource implements HasShieldPermissions
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
+                    ->description(fn ($record): ?string => $record->email)
+                    ->weight('medium')
                     ->toggleable()
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('email')
-                    ->toggleable()
-                    ->searchable(),
+                    ->searchable(['name', 'email'])
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('department.name')
+                    ->badge()
+                    ->color('info')
                     ->toggleable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('designation.name')
                     ->toggleable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('bank.name')
+                Tables\Columns\TextColumn::make('branch.name')
+                    ->icon('heroicon-m-map-pin')
                     ->toggleable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('bank.name')
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
                 Tables\Columns\TextColumn::make('account_number')
-                    ->toggleable()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('branch.name')
-                    ->toggleable()
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
                 Tables\Columns\ToggleColumn::make('active')
+                    ->label('Active')
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
@@ -201,6 +205,15 @@ class EmployeeResource extends Resource implements HasShieldPermissions
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->defaultSort('name')
+            ->striped()
+            ->persistFiltersInSession()
+            ->persistSearchInSession()
+            ->persistSortInSession()
+            ->filtersFormColumns(3)
+            ->emptyStateHeading('No employees found')
+            ->emptyStateDescription('Adjust the filters or add a new employee.')
+            ->emptyStateIcon('heroicon-o-user-group')
             ->filters([
                 SelectFilter::make('department')->relationship('department', 'name'),
                 SelectFilter::make('designation')->relationship('designation', 'name'),
@@ -225,12 +238,12 @@ class EmployeeResource extends Resource implements HasShieldPermissions
             ])
             ->modifyQueryUsing(function (Builder $query) {
                 if (! auth()->user()->can('view_outside_branch_employee')) {
-                    return $query->where('branch_id', auth()->user()->employee->branch->id);
+                    return $query->where('branch_id', auth()->user()->employee?->branch?->id);
                 }
             })
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\ViewAction::make()->iconButton(),
+                Tables\Actions\EditAction::make()->iconButton(),
             ])
             ->headerActions([
                 Tables\Actions\ExportAction::make()
@@ -241,8 +254,9 @@ class EmployeeResource extends Resource implements HasShieldPermissions
                     ]),
             ])
             ->bulkActions([
-                QueueableBulkAction::make('delete_user')
-                    ->label('Delete selected')
+                QueueableBulkAction::make('generate_payroll')
+                    ->label('Generate payroll for selected')
+                    ->icon('heroicon-o-banknotes')
                     ->job(Payrolls::class),
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\BulkAction::make('Activate Employees')->action(fn ($records) => $records->each(fn ($record) => $record->update(['active' => true]))),

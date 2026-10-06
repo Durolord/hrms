@@ -18,6 +18,8 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class LeaveResource extends Resource implements HasShieldPermissions
 {
@@ -35,16 +37,16 @@ class LeaveResource extends Resource implements HasShieldPermissions
         if ($user->can('view_non_managed_leave')) {
             if (! $user->can('view_outside_branch_employee')) {
                 $query->join('employees', 'leaves.employee_id', '=', 'employees.id')
-                    ->where('employees.branch_id', $employee->branch->id);
+                    ->where('employees.branch_id', $employee?->branch?->id);
             }
         } else {
             if ($user->can('view_outside_branch_employee')) {
                 $query->join('employees', 'leaves.employee_id', '=', 'employees.id')
-                    ->where('employees.manager_id', $employee->id);
+                    ->where('employees.manager_id', $employee?->id);
             } else {
                 $query->join('employees', 'leaves.employee_id', '=', 'employees.id')
-                    ->where('employees.branch_id', $employee->branch->id)
-                    ->where('employees.manager_id', $employee->id);
+                    ->where('employees.branch_id', $employee?->branch?->id)
+                    ->where('employees.manager_id', $employee?->id);
             }
         }
 
@@ -94,7 +96,14 @@ class LeaveResource extends Resource implements HasShieldPermissions
                         'Approved' => 'success',
                         'Rejected' => 'danger',
                     }),
+                Infolists\Components\TextEntry::make('working_days')
+                    ->label('Working Days')
+                    ->state(fn (Leave $record) => $record->workingDays()),
                 Infolists\Components\TextEntry::make('approver.name')->label('Approver'),
+                Infolists\Components\TextEntry::make('approved_on')->label('Decided On')->date(),
+                Infolists\Components\TextEntry::make('rejection_reason')
+                    ->label('Rejection Reason')
+                    ->visible(fn (Leave $record) => filled($record->rejection_reason)),
                 Infolists\Components\TextEntry::make('created_at')->label('Requested On')->dateTime(),
             ])
             ->columns(2);
@@ -116,14 +125,14 @@ class LeaveResource extends Resource implements HasShieldPermissions
                                     return $query;
                                 }
 
-                                return $query->where('branch_id', $employee->branch->id);
+                                return $query->where('branch_id', $employee?->branch?->id);
                             }
                             if ($user->can('view_outside_branch_employee')) {
-                                return $query->where('manager_id', $employee->id);
+                                return $query->where('manager_id', $employee?->id);
                             }
 
-                            return $query->where('branch_id', $employee->branch->id)
-                                ->where('manager_id', $employee->id);
+                            return $query->where('branch_id', $employee?->branch?->id)
+                                ->where('manager_id', $employee?->id);
                         },
                     )
                     ->label('Employee')
@@ -140,6 +149,9 @@ class LeaveResource extends Resource implements HasShieldPermissions
                     ->minDate(now()->addDays(1))
                     ->closeOnDateSelection()
                     ->required(),
+                Forms\Components\Toggle::make('is_half_day')
+                    ->label('Half day (single date only)')
+                    ->default(false),
                 Forms\Components\Select::make('leave_type_id')
                     ->relationship('leave_type', 'name')
                     ->required()
@@ -176,7 +188,7 @@ class LeaveResource extends Resource implements HasShieldPermissions
                     })
                     ->searchable(),
                 Tables\Columns\TextColumn::make('leave_balance')
-                    ->label('Current Leave Balance')
+                    ->label('Balance if approved (days)')
                     ->getStateUsing(fn ($record) => $record->status === 'Pending'
                             ? ($record->leaveBalance() ?? 'N/A')
                             : null
@@ -217,17 +229,17 @@ class LeaveResource extends Resource implements HasShieldPermissions
             ->modifyQueryUsing(function (Builder $query) {
                 $user = auth()->user();
                 $employee = $user->employee;
-                $query->join('employees', 'leaves.employee_id', '=', 'employees.id');
+                $query->select('leaves.*')->join('employees', 'leaves.employee_id', '=', 'employees.id');
                 if ($user->can('view_non_managed_leave')) {
                     if (! $user->can('view_outside_branch_employee')) {
-                        $query->where('employees.branch_id', $employee->branch->id);
+                        $query->where('employees.branch_id', $employee?->branch?->id);
                     }
                 } else {
                     if ($user->can('view_outside_branch_employee')) {
-                        $query->where('employees.manager_id', $employee->id);
+                        $query->where('employees.manager_id', $employee?->id);
                     } else {
-                        $query->where('employees.branch_id', $employee->branch->id)
-                            ->where('employees.manager_id', $employee->id);
+                        $query->where('employees.branch_id', $employee?->branch?->id)
+                            ->where('employees.manager_id', $employee?->id);
                     }
                 }
 
@@ -249,14 +261,14 @@ class LeaveResource extends Resource implements HasShieldPermissions
                                     return $query;
                                 }
 
-                                return $query->where('branch_id', $employee->branch->id);
+                                return $query->where('branch_id', $employee?->branch?->id);
                             }
                             if ($user->can('view_outside_branch_employee')) {
-                                return $query->where('manager_id', $employee->id);
+                                return $query->where('manager_id', $employee?->id);
                             }
 
-                            return $query->where('branch_id', $employee->branch->id)
-                                ->where('manager_id', $employee->id);
+                            return $query->where('branch_id', $employee?->branch?->id)
+                                ->where('manager_id', $employee?->id);
                         },
                     )
                     ->searchable()
@@ -277,90 +289,47 @@ class LeaveResource extends Resource implements HasShieldPermissions
                     ->tooltip('Approve')
                     ->icon('heroicon-o-check')
                     ->color('success')
-                    ->action(fn (Leave $record) => $record->update(['status' => 'Approved']))
+                    ->requiresConfirmation()
+                    ->action(fn (Leave $record) => $record->approve(auth()->user()))
                     ->visible(fn (Leave $record) => auth()->user()->can('approve_leave') && $record->status === 'Pending'),
                 Tables\Actions\Action::make('reject')
                     ->tooltip('Reject')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
-                    ->action(fn (Leave $record) => $record->update(['status' => 'Rejected']))
+                    ->form([
+                        Forms\Components\Textarea::make('rejection_reason')->label('Reason')->required(),
+                    ])
+                    ->action(fn (Leave $record, array $data) => $record->reject(auth()->user(), $data['rejection_reason']))
                     ->visible(fn (Leave $record) => auth()->user()->can('reject_leave') && $record->status === 'Pending'),
             ])
             ->bulkActions([
                 BulkAction::make('Bulk Approve')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
-                    ->action(fn ($records) => $records->each(fn ($record) => $record->update(['status' => 'Approved'])))
+                    ->requiresConfirmation()
+                    ->action(function (Collection $records) {
+                        $user = auth()->user();
+                        DB::transaction(fn () => $records
+                            ->load('employee.user', 'employee.manager.user', 'leave_type')
+                            ->filter(fn (Leave $leave) => $leave->status === 'Pending')
+                            ->each(fn (Leave $leave) => $leave->approve($user)));
+                    })
                     ->deselectRecordsAfterCompletion(),
                 BulkAction::make('Bulk Reject')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
-                    ->action(fn ($records) => $records->each(fn ($record) => $record->update(['status' => 'Rejected'])))
+                    ->form([
+                        Forms\Components\Textarea::make('rejection_reason')->label('Reason')->required(),
+                    ])
+                    ->action(function (Collection $records, array $data) {
+                        $user = auth()->user();
+                        DB::transaction(fn () => $records
+                            ->load('employee.user', 'employee.manager.user', 'leave_type')
+                            ->filter(fn (Leave $leave) => $leave->status === 'Pending')
+                            ->each(fn (Leave $leave) => $leave->reject($user, $data['rejection_reason'])));
+                    })
                     ->deselectRecordsAfterCompletion(),
             ]);
-    }
-
-    private static function approveLeave(Leave $record)
-    {
-        $record->update([
-            'status' => 'Approved',
-            'approved_on' => now(),
-            'approver_id' => auth()->id(),
-        ]);
-        if ($record->employee->user) {
-            Notification::make()
-                ->title('Leave Approved')
-                ->body('Your '.strtolower($record->leave_type->name)." request from {$record->start_date->format('d M Y')} to {$record->end_date->format('d M Y')} has been approved.")
-                ->success()
-                ->sendToDatabase($record->employee->user);
-        }
-        $approver = auth()->user();
-        if ($approver && $approver->hasRole('Admin')) {
-            User::role('Admin')->each(fn ($admin) => Notification::make()
-                ->title('Leave Approved for Subordinate')
-                ->body('The '.strtolower($record->leave_type->name)." request from {$record->start_date->format('d M Y')} to {$record->end_date->format('d M Y')} has been approved for {$record->employee->name}.")
-                ->success()
-                ->sendToDatabase($admin));
-        } else {
-            if ($record->employee->manager && $record->employee->manager->user) {
-                Notification::make()
-                    ->title('Leave Approved for Subordinate')
-                    ->body('The '.strtolower($record->leave_type->name)." request from {$record->start_date->format('d M Y')} to {$record->end_date->format('d M Y')} has been approved for {$record->employee->name}.")
-                    ->success()
-                    ->sendToDatabase($record->employee->manager->user);
-            }
-        }
-    }
-
-    private static function rejectLeave(Leave $record)
-    {
-        $record->update([
-            'status' => 'Rejected',
-            'approver_id' => auth()->id(),
-        ]);
-        if ($record->employee->user) {
-            Notification::make()
-                ->title('Leave Rejected')
-                ->body('Your '.strtolower($record->leave_type->name)." request from {$record->start_date->format('d M Y')} to {$record->end_date->format('d M Y')} has been rejected.")
-                ->danger()
-                ->sendToDatabase($record->employee->user);
-        }
-        $approver = auth()->user();
-        if ($approver && $approver->hasRole('Admin')) {
-            User::role('Admin')->each(fn ($admin) => Notification::make()
-                ->title('Leave Rejected for Subordinate')
-                ->body('The '.strtolower($record->leave_type->name)." request from {$record->start_date->format('d M Y')} to {$record->end_date->format('d M Y')} has been rejected for {$record->employee->name}.")
-                ->danger()
-                ->sendToDatabase($admin));
-        } else {
-            if ($record->employee->manager && $record->employee->manager->user) {
-                Notification::make()
-                    ->title('Leave Rejected for Subordinate')
-                    ->body('The '.strtolower($record->leave_type->name)." request from {$record->start_date->format('d M Y')} to {$record->end_date->format('d M Y')} has been rejected for {$record->employee->name}.")
-                    ->danger()
-                    ->sendToDatabase($record->employee->manager->user);
-            }
-        }
     }
 
     public static function getRelations(): array

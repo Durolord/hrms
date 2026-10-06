@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Auth;
 
 class MyLeaves extends BaseWidget
 {
+    protected static ?int $sort = 6;
+
     protected int|string|array $columnSpan = 'full';
 
     public function table(Table $table): Table

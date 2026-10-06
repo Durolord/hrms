@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Auth;
 
 class MyAttendance extends BaseWidget
 {
+    protected static ?int $sort = 5;
+
     protected int|string|array $columnSpan = 'full';
 
     public function table(Table $table): Table

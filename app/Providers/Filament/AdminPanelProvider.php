@@ -14,6 +14,7 @@ use Filament\Navigation\NavigationGroup;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Enums\MaxWidth;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -39,6 +40,12 @@ class AdminPanelProvider extends PanelProvider
             ->databaseNotifications()
             ->profile(Profile::class, false)
             ->viteTheme('resources/css/filament/admin/theme.css')
+            ->brandName('HRMS')
+            ->font('Inter')
+            ->maxContentWidth(MaxWidth::Full)
+            ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
+            ->globalSearchDebounce('300ms')
+            ->unsavedChangesAlerts()
             ->colors([
                 'primary' => Color::Blue,
             ])
@@ -68,6 +75,10 @@ class AdminPanelProvider extends PanelProvider
                 \App\Filament\Pages\Dashboard::class,
             ])
             ->widgets([
+                Widgets\PendingApprovalsWidget::class,
+                Widgets\MyLeaveBalanceWidget::class,
+                Widgets\WhosOutWidget::class,
+                Widgets\AnniversariesWidget::class,
                 Widgets\MyAttendance::class,
                 Widgets\MyLeaves::class,
                 Widgets\MyPayrolls::class,
@@ -89,6 +100,14 @@ class AdminPanelProvider extends PanelProvider
             ])->authMiddleware([
                 Authenticate::class,
             ])
+            ->renderHook(
+                'panels::head.end',
+                fn (): string => config('app.demo') ? '<meta name="robots" content="noindex, nofollow">' : '',
+            )
+            ->renderHook(
+                'panels::body.start',
+                fn (): ?View => config('app.demo') ? view('components.demo-banner') : null,
+            )
             ->renderHook(
                 'panels::footer',
                 fn (): View => view('components.loading-footer'),

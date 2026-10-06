@@ -45,7 +45,7 @@ class DeductionResource extends Resource implements HasShieldPermissions
                         titleAttribute: 'name',
                         modifyQueryUsing: fn (Builder $query) => auth()->user()->can('view_outside_branch_employee')
                             ? $query
-                            : $query->where('branch_id', auth()->user()->employee->branch->id),
+                            : $query->where('branch_id', auth()->user()->employee?->branch?->id),
                     )
                     ->searchable()
                     ->required(),
@@ -109,7 +109,7 @@ class DeductionResource extends Resource implements HasShieldPermissions
                         titleAttribute: 'name',
                         modifyQueryUsing: fn (Builder $query) => auth()->user()->can('view_outside_branch_employee')
                             ? $query
-                            : $query->where('branch_id', auth()->user()->employee->branch->id),
+                            : $query->where('branch_id', auth()->user()->employee?->branch?->id),
                     ),
                 Tables\Filters\Filter::make('deduction_month')
                     ->form([
@@ -127,8 +127,8 @@ class DeductionResource extends Resource implements HasShieldPermissions
             ])
             ->modifyQueryUsing(function (Builder $query) {
                 if (! auth()->user()->can('view_outside_branch_employee')) {
-                    return $query->join('employees', 'deductions.employee_id', '=', 'employees.id')
-                        ->where('employees.branch_id', auth()->user()->employee->branch->id);
+                    return $query->select('deductions.*')->join('employees', 'deductions.employee_id', '=', 'employees.id')
+                        ->where('employees.branch_id', auth()->user()->employee?->branch?->id);
                 }
             })
             ->actions([

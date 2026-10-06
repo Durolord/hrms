@@ -4,7 +4,9 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\DeductionResource\Pages;
 use App\Models\Deduction;
+use App\Support\HelpLink;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
+use Carbon\Carbon;
 use Coolsam\FilamentFlatpickr\Forms\Components\Flatpickr;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -61,7 +63,7 @@ class DeductionResource extends Resource implements HasShieldPermissions
                     ->default(0)
                     ->live()
                     ->maxValue(fn (Get $get) => $get('is_percentage') ? 50 : null)
-                    ->helperText(fn (Get $get) => $get('is_percentage') ? 'Max 50% allowed' : ''),
+                    ->helperText(fn (Get $get) => HelpLink::payroll($get('is_percentage') ? 'Max 50% allowed.' : null)),
                 Flatpickr::make('month')
                     ->monthSelect()
                     ->altInput(true)
@@ -113,15 +115,15 @@ class DeductionResource extends Resource implements HasShieldPermissions
                     ),
                 Tables\Filters\Filter::make('deduction_month')
                     ->form([
-                    Flatpickr::make('month')
-                        ->monthSelect(),
+                        Flatpickr::make('month')
+                            ->monthSelect(),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
                             ->when(
                                 $data['month'],
-                                fn (Builder $query, $date): Builder => $query->whereMonth('month', '=', \Carbon\Carbon::parse($date)->month)
-                                    ->whereYear('month', '=', \Carbon\Carbon::parse($date)->year),
+                                fn (Builder $query, $date): Builder => $query->whereMonth('month', '=', Carbon::parse($date)->month)
+                                    ->whereYear('month', '=', Carbon::parse($date)->year),
                             );
                     }),
             ])

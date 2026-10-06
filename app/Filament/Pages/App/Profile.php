@@ -3,6 +3,8 @@
 namespace App\Filament\Pages\App;
 
 use App\Filament\Actions\GeneratePasswordAction;
+use App\Models\User;
+use App\Support\Demo;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -23,17 +25,23 @@ class Profile extends EditProfile
     {
         /** @var TextInput $passwordComponent */
         $passwordComponent = $this->getPasswordFormComponent();
+        /** @var TextInput $emailComponent */
+        $emailComponent = $this->getEmailFormComponent();
+        // Shared demo accounts keep their sign-in details for the next visitor (also enforced in DemoGuard).
+        $user = $this->getUser();
+        $locked = $user instanceof User && Demo::protects($user);
+        $lockedHint = $locked ? 'Locked on shared demo accounts so the next visitor can sign in.' : null;
 
         return $form->schema([
             Section::make()
                 ->inlineLabel(false)
                 ->schema([
                     $this->getNameFormComponent(),
-                    $this->getEmailFormComponent()->disabled(config('app.demo')),
-                    $passwordComponent->disabled(config('app.demo'))->suffixActions([
-                        GeneratePasswordAction::make(),
+                    $emailComponent->disabled($locked)->helperText($lockedHint),
+                    $passwordComponent->disabled($locked)->helperText($lockedHint)->suffixActions([
+                        GeneratePasswordAction::make()->hidden($locked),
                     ]),
-                    $this->getPasswordConfirmationFormComponent()->disabled(config('app.demo')),
+                    $this->getPasswordConfirmationFormComponent()->disabled($locked),
                 ]),
             Section::make('Notifications')
                 ->schema([

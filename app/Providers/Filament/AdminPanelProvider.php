@@ -4,9 +4,14 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\App\Profile;
 use App\Filament\Pages\Auth\Login;
+use App\Filament\Pages\Dashboard;
+use App\Filament\Resources\BulkActionResource;
 use App\Filament\Widgets;
+use App\Support\Demo;
+use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Bytexr\QueueableBulkActions\Enums\StatusEnum;
 use Bytexr\QueueableBulkActions\QueueableBulkActionsPlugin;
+use DiogoGPinto\AuthUIEnhancer\AuthUIEnhancerPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -15,10 +20,12 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Support\Enums\MaxWidth;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
@@ -29,18 +36,24 @@ class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
+        // Shared demo accounts have no inbox, so there is nothing to reset in demo mode.
+        if (! Demo::enabled()) {
+            $panel->passwordReset();
+        }
+
         return $panel
             ->default()
             ->id('admin')
             ->path('/')
             ->login(Login::class)
-            ->passwordReset()
             ->sidebarCollapsibleOnDesktop()
             ->sidebarFullyCollapsibleOnDesktop()
             ->databaseNotifications()
             ->profile(Profile::class, false)
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->brandName('HRMS')
+            ->brandLogo(fn (): View => view('components.brand-logo'))
+            ->brandLogoHeight('2.25rem')
             ->font('Inter')
             ->maxContentWidth(MaxWidth::Full)
             ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
@@ -50,13 +63,13 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Blue,
             ])
             ->plugins([
-                \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
+                FilamentShieldPlugin::make(),
                 FilamentFullCalendarPlugin::make()
                     ->selectable()
                     ->editable(),
                 QueueableBulkActionsPlugin::make()
                     ->pollingInterval('5s')
-                    ->resource(\App\Filament\Resources\BulkActionResource::class)
+                    ->resource(BulkActionResource::class)
                     ->queue('database', 'default')
                     ->colors([
                         StatusEnum::QUEUED->value => 'slate',
@@ -64,7 +77,7 @@ class AdminPanelProvider extends PanelProvider
                         StatusEnum::FINISHED->value => 'success',
                         StatusEnum::FAILED->value => 'danger',
                     ]),
-                \DiogoGPinto\AuthUIEnhancer\AuthUIEnhancerPlugin::make()
+                AuthUIEnhancerPlugin::make()
                     ->showEmptyPanelOnMobile(true)
                     ->mobileFormPanelPosition('bottom')
                     ->emptyPanelBackgroundImageUrl('images/office-dark.jpeg'),
@@ -72,7 +85,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
-                \App\Filament\Pages\Dashboard::class,
+                Dashboard::class,
             ])
             ->widgets([
                 Widgets\PendingApprovalsWidget::class,
@@ -97,16 +110,28 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-            ])->authMiddleware([
+            ])
+            // A tighter request budget per IP for the public demo (Livewire requests included).
+            ->middleware(Demo::enabled() ? [ThrottleRequests::using('demo')] : [], isPersistent: true)
+            ->authMiddleware([
                 Authenticate::class,
             ])
             ->renderHook(
-                'panels::head.end',
-                fn (): string => config('app.demo') ? '<meta name="robots" content="noindex, nofollow">' : '',
+                PanelsRenderHook::HEAD_START,
+                fn (): View => view('components.favicon'),
             )
             ->renderHook(
-                'panels::body.start',
-                fn (): ?View => config('app.demo') ? view('components.demo-banner') : null,
+                PanelsRenderHook::HEAD_END,
+                fn (): string => Demo::enabled() ? '<meta name="robots" content="noindex, nofollow">' : '',
+            )
+            ->renderHook(
+                PanelsRenderHook::BODY_START,
+                fn (): ?View => Demo::enabled() ? view('components.demo-banner') : null,
+            )
+            ->renderHook(
+                PanelsRenderHook::AUTH_LOGIN_FORM_AFTER,
+                fn (): ?View => Demo::enabled() ? view('filament.pages.auth.demo-accounts') : null,
+                scopes: Login::class,
             )
             ->renderHook(
                 'panels::footer',
@@ -140,6 +165,10 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make()
                     ->label('Notes and Records Management')
                     ->icon('heroicon-o-document-text'),
+                NavigationGroup::make()
+                    ->label('Help & Documentation')
+                    ->icon('heroicon-o-lifebuoy')
+                    ->collapsed(),
             ]);
     }
 }

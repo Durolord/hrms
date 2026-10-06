@@ -8,6 +8,7 @@ use App\Filament\Resources\EmployeeResource\RelationManagers;
 use App\Jobs\Payrolls;
 use App\Models\Bank;
 use App\Models\Employee;
+use App\Support\HelpLink;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Bytexr\QueueableBulkActions\Filament\Actions\QueueableBulkAction;
 use Filament\Actions\Exports\Enums\ExportFormat;
@@ -98,6 +99,7 @@ class EmployeeResource extends Resource implements HasShieldPermissions
                     ->searchable()
                     ->required(),
                 Forms\Components\Select::make('designation_id')
+                    ->helperText(HelpLink::payroll('Sets the pay scale used for payroll.'))
                     ->relationship('designation', 'name')
                     ->preload()
                     ->searchable()
@@ -140,6 +142,7 @@ class EmployeeResource extends Resource implements HasShieldPermissions
                     ->live()
                     ->required(),
                 Forms\Components\Select::make('manager_id')
+                    ->helperText(HelpLink::leave('Receives and decides this person\'s leave requests.'))
                     ->live()
                     ->relationship(
                         'manager',
@@ -156,7 +159,7 @@ class EmployeeResource extends Resource implements HasShieldPermissions
                     ->searchable()
                     ->preload()
                     ->nullable(),
-                Forms\Components\DatePicker::make('employment_start_date')
+                DatePicker::make('employment_start_date')
                     ->disabledOn('edit')
                     ->default(today())
                     ->native(false)

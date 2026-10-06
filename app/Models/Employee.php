@@ -2,6 +2,7 @@
 namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Image\Enums\Fit;
@@ -101,7 +102,7 @@ class Employee extends Model implements HasMedia
     {
         return $this->belongsTo(PayScale::class);
     }
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }

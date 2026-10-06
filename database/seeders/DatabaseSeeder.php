@@ -11,6 +11,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             ShieldSeeder::class,
             ExtraPermissionsSeeder::class,
+            DemoAccountSeeder::class,
             HolidaySeeder::class,
             UserSeeder::class,
             DepartmentSeeder::class,
@@ -29,6 +30,7 @@ class DatabaseSeeder extends Seeder
             BankSeeder::class,
             OpeningSeeder::class,
             ApplicantSeeder::class,
+            DemoDataSeeder::class,
         ]);
     }
 }

@@ -15,7 +15,7 @@ Demo only: fake data, `DEMO_MODE=true`. Never point at real Tishri Infotech data
 ## Server (cPanel)
 1. Create `hrms.durolord.com`, docroot `/home/USER/hrms/public`; enable AutoSSL.
 2. Create MySQL DB + user; PHP 8.2+ with intl, gd/imagick, zip, mbstring, bcmath, fileinfo, pdo_mysql.
-3. Upload project incl. `vendor/` and `public/build`; exclude `.env`, `node_modules`, `.git`, `tests`, `chk_tmp.php`.
+3. Upload project incl. `vendor/` and `public/build`; exclude `.env`, `node_modules`, `.git`, `tests`.
 4. `cp .env.production.example .env`, fill `DB_*`, `DEMO_MODE=true`, then:
    `php artisan key:generate && php artisan migrate --force --seed && php artisan storage:link && php artisan optimize && php artisan filament:optimize`
 5. Cron every minute: `php /home/USER/hrms/artisan schedule:run >> /dev/null 2>&1`

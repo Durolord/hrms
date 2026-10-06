@@ -4,6 +4,7 @@ namespace Tests;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Illuminate\Support\Facades\Hash;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -12,7 +13,7 @@ abstract class TestCase extends BaseTestCase
         parent::setUp();
         $this->actingAs(User::factory()->create([
             'email' => config('app.default_user.email'),
-            'password' => config('app.default_user.password'),
+            'password' => Hash::make(config('app.default_user.password')),
         ]));
         $this->withoutVite();
     }

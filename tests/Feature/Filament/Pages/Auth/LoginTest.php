@@ -12,7 +12,7 @@ test('an unauthenticated user can access the login page', function () {
 });
 test('an unauthenticated user can not access the admin panel', function () {
     auth()->logout();
-    $this->get('admin')
+    $this->get('/')
         ->assertRedirect(Filament::getLoginUrl());
 });
 test('an unauthenticated user can login', function () {
@@ -27,7 +27,7 @@ test('an unauthenticated user can login', function () {
         ->assertHasNoFormErrors();
 });
 test('an authenticated user can access the admin panel', function () {
-    $this->get('admin')
+    $this->get('/')
         ->assertOk();
 });
 test('an authenticated user can logout', function () {

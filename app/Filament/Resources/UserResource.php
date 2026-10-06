@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
+use App\Support\HelpLink;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -39,6 +40,7 @@ class UserResource extends Resource implements HasShieldPermissions
                 Forms\Components\Section::make()
                     ->schema([
                         Forms\Components\Select::make('roles')
+                            ->helperText(HelpLink::roles())
                             ->relationship('roles', 'name')
                             ->multiple()
                             ->preload()

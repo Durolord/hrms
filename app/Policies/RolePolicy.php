@@ -3,9 +3,13 @@
 namespace App\Policies;
 
 use App\Models\User;
+use App\Support\Demo;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Spatie\Permission\Models\Role;
 
+/**
+ * Roles are read-only in demo mode: the shared demo accounts depend on them.
+ */
 class RolePolicy
 {
     use HandlesAuthorization;
@@ -23,7 +27,7 @@ class RolePolicy
      */
     public function create(User $user): bool
     {
-        return ! config('app.demo') && $user->can('create_role');
+        return ! Demo::enabled() && $user->can('create_role');
     }
 
     /**
@@ -31,7 +35,7 @@ class RolePolicy
      */
     public function update(User $user, Role $role): bool
     {
-        return ! config('app.demo') && $user->can('update_role');
+        return ! Demo::enabled() && $user->can('update_role');
     }
 
     /**
@@ -39,7 +43,7 @@ class RolePolicy
      */
     public function delete(User $user, Role $role): bool
     {
-        return ! config('app.demo') && $user->can('delete_role');
+        return ! Demo::enabled() && $user->can('delete_role');
     }
 
     /**
@@ -47,6 +51,6 @@ class RolePolicy
      */
     public function deleteAny(User $user): bool
     {
-        return ! config('app.demo') && $user->can('delete_any_role');
+        return ! Demo::enabled() && $user->can('delete_any_role');
     }
 }

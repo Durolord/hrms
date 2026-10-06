@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Filament\Widgets\CollapsibleTableWidget as BaseWidget;
 use App\Models\Leave;
+use App\Support\HelpLink;
 use Coolsam\FilamentFlatpickr\Forms\Components\Flatpickr;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -114,6 +115,7 @@ class MyLeaves extends BaseWidget
                         ->required(),
                     Select::make('leave_type_id')
                         ->label('Leave Type')
+                        ->helperText(HelpLink::leave('Weekends and public holidays are not counted.'))
                         ->relationship('leave_type', 'name')
                         ->searchable()
                         ->preload()

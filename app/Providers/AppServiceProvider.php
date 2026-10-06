@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Support\Demo;
+use App\Support\DemoGuard;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\Placeholder;
 use Filament\Infolists\Components\Entry;
@@ -11,8 +13,11 @@ use Filament\Support\Facades\FilamentColor;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Filters\BaseFilter;
 use Filament\Tables\Table;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -31,7 +36,8 @@ class AppServiceProvider extends ServiceProvider
 
     private function configureCommands(): void
     {
-        DB::prohibitDestructiveCommands($this->app->isProduction());
+        // The public demo runs in production but must be able to migrate:fresh on every demo:reset.
+        DB::prohibitDestructiveCommands($this->app->isProduction() && ! Demo::enabled());
     }
 
     private function configureModels(): void
@@ -39,9 +45,19 @@ class AppServiceProvider extends ServiceProvider
         Model::shouldBeStrict(! app()->isProduction());
     }
 
+    /**
+     * Demo-mode limits; each check is a no-op unless DEMO_MODE is on.
+     */
+    private function configureDemo(): void
+    {
+        DemoGuard::register();
+        RateLimiter::for('demo', fn (Request $request) => Limit::perMinute(max(1, (int) config('demo.requests_per_minute')))->by($request->ip()));
+    }
+
     public function boot(): void
     {
         $this->configureCommands();
+        $this->configureDemo();
         $this->translatableComponents();
         Table::configureUsing(fn (Table $table) => $table
             ->striped()

@@ -4,6 +4,7 @@ namespace App\Filament\Actions;
 
 use App\Jobs\Payrolls;
 use App\Models\Employee;
+use App\Support\HelpLink;
 use Bytexr\QueueableBulkActions\Enums\BulkActions\TypeEnum;
 use Bytexr\QueueableBulkActions\Jobs\BulkActionSetupJob;
 use Bytexr\QueueableBulkActions\Support\Config;
@@ -24,7 +25,7 @@ class GeneratePayrollsAction extends Action
             ->form([
                 Flatpickr::make('month')
                     ->default(now()->format('Y-m'))
-                    ->helperText('Select the payroll month')
+                    ->helperText(HelpLink::payroll('Drafts a Pending payroll for every active employee you can see.'))
                     ->maxDate(now()->format('Y-m'))
                     ->monthSelect()
                     ->required(),

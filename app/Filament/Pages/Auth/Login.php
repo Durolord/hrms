@@ -37,7 +37,7 @@ class Login extends BaseLogin
             ->email()
             ->required()
             ->autocomplete()
-            ->default('olumide_adebayo@example.com')
+            ->default(config('app.demo') ? 'olumide_adebayo@example.com' : null)
             ->autofocus()
             ->extraInputAttributes(['tabindex' => 1]);
     }
@@ -47,7 +47,7 @@ class Login extends BaseLogin
             ->label(__('filament-panels::pages/auth/login.form.password.label'))
             ->hint(filament()->hasPasswordReset() ? new HtmlString(Blade::render('<x-filament::link :href="filament()->getRequestPasswordResetUrl()" tabindex="3"> {{ __(\'filament-panels::pages/auth/login.actions.request_password_reset.label\') }}</x-filament::link>')) : null)
             ->password()
-            ->default('password')
+            ->default(config('app.demo') ? 'password' : null)
             ->revealable(filament()->arePasswordsRevealable())
             ->autocomplete('current-password')
             ->required()

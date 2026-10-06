@@ -90,6 +90,14 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->renderHook(
+                'panels::head.end',
+                fn (): string => config('app.demo') ? '<meta name="robots" content="noindex, nofollow">' : '',
+            )
+            ->renderHook(
+                'panels::body.start',
+                fn (): ?View => config('app.demo') ? view('components.demo-banner') : null,
+            )
+            ->renderHook(
                 'panels::footer',
                 fn (): View => view('components.loading-footer'),
             )

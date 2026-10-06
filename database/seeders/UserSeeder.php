@@ -6,6 +6,9 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
+/**
+ * The rest of the staff (non-demo accounts), five per role, so lists and dashboards look lived-in.
+ */
 class UserSeeder extends Seeder
 {
     public function run()
@@ -24,12 +27,14 @@ class UserSeeder extends Seeder
         ];
         foreach ($roles as $role) {
             foreach ($nigerianNames[$role] as $i => $name) {
-                $user = User::create([
-                    'name' => $name,
-                    'email' => strtolower(str_replace(' ', '_', $name)).'@example.com',
-                    'password' => Hash::make('password'),
-                ]);
-                $user->assignRole($role);
+                // The demo accounts (DemoAccountSeeder) are already seeded with their own role.
+                $user = User::firstOrCreate(
+                    ['email' => strtolower(str_replace(' ', '_', $name)).'@example.com'],
+                    ['name' => $name, 'password' => Hash::make('password')],
+                );
+                if ($user->wasRecentlyCreated) {
+                    $user->assignRole($role);
+                }
             }
         }
     }

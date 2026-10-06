@@ -6,6 +6,8 @@ use App\Filament\Resources\EmployeeResource;
 use App\Models\Bonus;
 use App\Models\Deduction;
 use App\Models\Payroll;
+use App\Support\HelpLink;
+use Carbon\Carbon;
 use Coolsam\FilamentFlatpickr\Forms\Components\Flatpickr;
 use Filament\Actions;
 use Filament\Forms\Components\FileUpload;
@@ -90,7 +92,7 @@ class ViewEmployee extends ViewRecord
                         ->default(0)
                         ->live()
                         ->maxValue(fn (Get $get) => $get('is_percentage') ? 50 : null)
-                        ->helperText(fn (Get $get) => $get('is_percentage') ? 'Max 50% allowed' : ''),
+                        ->helperText(fn (Get $get) => HelpLink::payroll($get('is_percentage') ? 'Max 50% allowed.' : null)),
                     Flatpickr::make('month')
                         ->monthSelect()
                         ->maxDate(now()->startOfMonth())
@@ -111,8 +113,8 @@ class ViewEmployee extends ViewRecord
         $month = $data['month'];
         $type = $data['type'];
         $hasFinalizedPayroll = Payroll::where('employee_id', $employeeId)
-            ->whereMonth('month', '=', \Carbon\Carbon::parse($month)->month)
-            ->whereYear('month', '=', \Carbon\Carbon::parse($month)->year)
+            ->whereMonth('month', '=', Carbon::parse($month)->month)
+            ->whereYear('month', '=', Carbon::parse($month)->year)
             ->where('status', '!=', 'Pending')
             ->exists();
         if ($hasFinalizedPayroll) {

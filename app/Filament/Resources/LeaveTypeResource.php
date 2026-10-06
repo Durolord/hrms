@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\LeaveTypeResource\Pages;
 use App\Models\LeaveType;
+use App\Support\HelpLink;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -43,12 +44,14 @@ class LeaveTypeResource extends Resource implements HasShieldPermissions
                 Forms\Components\TextInput::make('deduction_amount')
                     ->required()
                     ->label('Daily Deduction Amount')
+                    ->helperText(HelpLink::leave('Deducted from payroll for each working day of approved leave; 0 for paid leave.'))
                     ->mask(RawJs::make('$money($input)'))
                     ->stripCharacters(',')
                     ->numeric()
                     ->minValue(0)
                     ->default(0),
                 Forms\Components\TextInput::make('max_days')
+                    ->helperText(HelpLink::leave('Days per employee per year; pending requests count against it.'))
                     ->required()
                     ->numeric()
                     ->minValue(1)

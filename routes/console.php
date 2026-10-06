@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\Demo;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 
@@ -16,7 +17,7 @@ Schedule::command('app:dispatch-generate-payrolls-batch')->monthlyOn(config('pay
 
 Schedule::command('hr:send-reminders')->weekdays()->at('08:00')->withoutOverlapping();
 
-// Public demo only: restore a clean dataset every night.
-if (config('app.demo')) {
-    Schedule::command('demo:reset')->dailyAt('03:00')->withoutOverlapping();
+// Public demo only: restore a clean dataset on DEMO_RESET_CRON (hourly by default).
+if (Demo::enabled()) {
+    Schedule::command('demo:reset')->cron(config('demo.reset_cron'))->withoutOverlapping();
 }

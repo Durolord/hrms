@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Employee;
 use App\Models\User;
+use App\Support\Demo;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class EmployeePolicy
@@ -47,7 +48,7 @@ class EmployeePolicy
      */
     public function delete(User $user, Employee $employee): bool
     {
-        return $user->can('delete_employee');
+        return ! Demo::protectsEmployee($employee) && $user->can('delete_employee');
     }
 
     /**
@@ -63,7 +64,7 @@ class EmployeePolicy
      */
     public function forceDelete(User $user, Employee $employee): bool
     {
-        return $user->can('force_delete_employee');
+        return ! Demo::protectsEmployee($employee) && $user->can('force_delete_employee');
     }
 
     /**

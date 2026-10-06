@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Models\User;
+use App\Support\Demo;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class UserPolicy
@@ -26,27 +27,27 @@ class UserPolicy
     }
 
     /**
-     * Determine whether the user can update the model.
+     * Determine whether the user can update the model. Shared demo accounts stay as seeded.
      */
-    public function update(User $user): bool
+    public function update(User $user, User $model): bool
     {
-        return ! config('app.demo') && $user->can('update_user');
+        return ! Demo::protects($model) && $user->can('update_user');
     }
 
     /**
-     * Determine whether the user can delete the model.
+     * Determine whether the user can delete the model. Shared demo accounts can't be deleted.
      */
-    public function delete(User $user): bool
+    public function delete(User $user, User $model): bool
     {
-        return ! config('app.demo') && $user->can('delete_user');
+        return ! Demo::protects($model) && $user->can('delete_user');
     }
 
     /**
-     * Determine whether the user can bulk delete.
+     * Determine whether the user can bulk delete (off in demo mode, where a selection could include demo accounts).
      */
     public function deleteAny(User $user): bool
     {
-        return ! config('app.demo') && $user->can('delete_any_user');
+        return ! Demo::enabled() && $user->can('delete_any_user');
     }
 
     /**

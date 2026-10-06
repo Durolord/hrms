@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<defs><linearGradient id="metal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6b3f12"/><stop offset="0.28" stop-color="#c98a3d"/><stop offset="0.5" stop-color="#f6d892"/><stop offset="0.72" stop-color="#b06f24"/><stop offset="1" stop-color="#5e3710"/></linearGradient><linearGradient id="metalV" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6b3f12"/><stop offset="0.28" stop-color="#c98a3d"/><stop offset="0.5" stop-color="#f6d892"/><stop offset="0.72" stop-color="#b06f24"/><stop offset="1" stop-color="#5e3710"/></linearGradient><radialGradient id="face" cx="50%" cy="42%" r="60%"><stop offset="0" stop-color="#f7f1e8"/><stop offset="1" stop-color="#ffffff"/></radialGradient></defs>
+<circle cx="256" cy="256" r="250" fill="url(#face)"/>
+<circle cx="256" cy="256" r="236" fill="none" stroke="url(#metal)" stroke-width="22"/>
+<text x="148" y="338" font-size="230" text-anchor="middle" font-family="'Cinzel Decorative', 'Cinzel', 'Trajan Pro', 'Times New Roman', Georgia, serif" font-weight="700" fill="url(#metalV)" stroke="#4a2a0b" stroke-width="4" paint-order="stroke">H</text>
+<text x="366" y="338" font-size="230" text-anchor="middle" font-family="'Cinzel Decorative', 'Cinzel', 'Trajan Pro', 'Times New Roman', Georgia, serif" font-weight="700" fill="url(#metalV)" stroke="#4a2a0b" stroke-width="4" paint-order="stroke">R</text>
+<g transform="translate(0 -40) scale(1 1.16) translate(0 4)"><g transform="translate(256 0) scale(1.5 1) translate(-256 0)">
+  <path d="M256 92 l11 14 -11 14 -11 -14z" fill="url(#metal)" stroke="#4a2a0b" stroke-width="1.5"/>
+  <circle cx="256" cy="128" r="9" fill="url(#metal)" stroke="#4a2a0b" stroke-width="1.5"/>
+  <rect x="248" y="136" width="16" height="44" rx="4" fill="url(#metalV)" stroke="#4a2a0b" stroke-width="1.5"/>
+  <path d="M248 146 h16 M248 156 h16 M248 166 h16" stroke="#4a2a0b" stroke-width="2" opacity=".55"/>
+  <path d="M256 178 C240 176 226 168 214 156 C208 150 200 152 202 160 C205 170 218 172 222 166
+           C232 182 244 190 256 192 C268 190 280 182 290 166 C294 172 307 170 310 160 C312 152 304 150 298 156
+           C286 168 272 176 256 178z" fill="url(#metal)" stroke="#4a2a0b" stroke-width="1.5"/>
+  <path d="M243 192 L269 192 L266 214 C262 222 262 230 266 238 L262 392 L256 432 L250 392 L246 238 C250 230 250 222 246 214z"
+        fill="url(#metalV)" stroke="#4a2a0b" stroke-width="1.5"/>
+  <path d="M256 200 C246 212 246 226 256 236 C266 226 266 212 256 200z M256 244 L256 386" fill="none" stroke="#4a2a0b" stroke-width="2" opacity=".6"/>
+</g></g>
+</svg>

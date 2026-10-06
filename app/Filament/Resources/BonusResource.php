@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\BonusResource\Pages;
 use App\Models\Bonus;
+use App\Support\HelpLink;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Coolsam\FilamentFlatpickr\Forms\Components\Flatpickr;
 use Filament\Forms;
@@ -61,7 +62,7 @@ class BonusResource extends Resource implements HasShieldPermissions
                     ->default(0)
                     ->live()
                     ->maxValue(fn (Get $get) => $get('is_percentage') ? 50 : null)
-                    ->helperText(fn (Get $get) => $get('is_percentage') ? 'Max 50% allowed' : ''),
+                    ->helperText(fn (Get $get) => HelpLink::payroll($get('is_percentage') ? 'Max 50% allowed.' : null)),
                 Flatpickr::make('month')
                     ->monthSelect()
                     ->dateFormat('Y-m')

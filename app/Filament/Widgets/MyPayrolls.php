@@ -105,6 +105,7 @@ class MyPayrolls extends BaseWidget
                     'Pending' => 'Pending',
                     'Approved' => 'Approved',
                     'Paid' => 'Paid',
+                    'Rejected' => 'Rejected',
                 ])
                 ->query(fn (Builder $query, array $data) => $data['value'] ? $query->where('status', $data['value']) : $query
                 ),
@@ -119,7 +120,7 @@ class MyPayrolls extends BaseWidget
                 ->icon('heroicon-o-arrow-down-tray')
                 ->url(fn ($record) => route('payroll.download-pdf', $record))
                 ->openUrlInNewTab()
-                ->visible(fn (Payroll $record) => $record->status != 'Pending'),
+                ->visible(fn (Payroll $record) => in_array($record->status, ['Approved', 'Paid'])),
         ];
     }
 }

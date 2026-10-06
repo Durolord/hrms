@@ -10,6 +10,7 @@ use App\Models\Bank;
 use App\Models\Employee;
 use App\Models\Leave;
 use App\Models\LeaveType;
+use App\Models\Payroll;
 use App\Models\User;
 use App\Services\PayrollProcessingService;
 use App\Support\Demo;
@@ -48,6 +49,7 @@ class DemoDataSeeder extends Seeder
         $this->seedBankDetails();
         $this->seedLeave($team, $employee, $accounts->get('HR Manager'));
         $this->seedPayrolls($accounts->get('Finance Manager'));
+        $this->seedEmployeePayslips($accounts->get('Finance Manager'), $employee);
         $this->seedRecruitment($accounts->get('HR Manager'));
 
         Auth::forgetUser();
@@ -161,6 +163,35 @@ class DemoDataSeeder extends Seeder
             } catch (DomainException) {
                 // Joined after that month: no payroll is due.
             }
+        }
+    }
+
+    /**
+     * The demo Employee gets four months of payslips: this month and last month approved (downloadable),
+     * two months back rejected, three months back paid. Replaces whatever the generic loop drafted for them.
+     */
+    private function seedEmployeePayslips(?User $finance, Employee $employee): void
+    {
+        $this->actingAs($finance);
+        $service = app(PayrollProcessingService::class);
+        $statuses = [3 => 'Paid', 2 => 'Rejected', 1 => 'Approved', 0 => 'Approved'];
+
+        foreach ($statuses as $monthsBack => $status) {
+            $month = now()->startOfMonth()->subMonths($monthsBack);
+            // generate() refuses to rebuild a finalised payroll, and snapshots reference it, so reset instead of delete.
+            Payroll::where('employee_id', $employee->id)->where('month', $month->copy()->startOfMonth())
+                ->update(['status' => 'Pending', 'approved_at' => null, 'paid_at' => null]);
+            try {
+                $payroll = $service->generate($employee, $month->format('Y-m'));
+            } catch (DomainException) {
+                continue; // Joined after that month: no payroll is due.
+            }
+            $approvedAt = $month->copy()->addDays(2);
+            $payroll->update(match ($status) {
+                'Paid' => ['status' => 'Paid', 'approved_at' => $approvedAt, 'paid_at' => $approvedAt->copy()->addDays(2)],
+                'Approved' => ['status' => 'Approved', 'approved_at' => min($approvedAt, now())],
+                default => ['status' => 'Rejected'],
+            });
         }
     }
 

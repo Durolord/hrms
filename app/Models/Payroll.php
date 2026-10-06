@@ -117,6 +117,11 @@ class Payroll extends Model
     {
         $this->update(['status' => 'Paid', 'paid_at' => now()]);
     }
+    public function markRejected(): void
+    {
+        $this->update(['status' => 'Rejected']);
+    }
+
     public function totalDeductions(): float
     {
         return $this->total_deductions;

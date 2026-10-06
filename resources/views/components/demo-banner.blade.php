@@ -18,9 +18,10 @@
         },
     }"
     x-init="tick(); setInterval(() => tick(), 1000)"
-    class="w-full bg-amber-500 px-4 py-1 text-center text-xs font-medium text-black sm:text-sm"
+    style="background-color: #f59e0b; color: #111827; position: relative; z-index: 50;"
+    class="w-full px-4 py-1.5 text-center text-xs font-medium sm:text-sm"
 >
     Live demo. Explore freely: all data resets in
     <span x-text="label" class="font-semibold tabular-nums">{{ \App\Support\Demo::resetsIn() }}</span>.
-    <a href="https://durolord.com/projects/hr-management-system" class="underline">About this project</a>
+    <a href="https://durolord.com/projects/hr-management-system" style="color: #111827;" class="font-semibold underline">About this project</a>
 </div>

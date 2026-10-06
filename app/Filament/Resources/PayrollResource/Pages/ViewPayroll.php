@@ -23,12 +23,22 @@ class ViewPayroll extends ViewRecord
                 ->requiresConfirmation()
                 ->visible(fn (Payroll $record) => $record->status === 'Pending')
                 ->action(fn (Payroll $record) => $this->regeneratePayroll($record)),
+            Actions\Action::make('reject')
+                ->tooltip('Reject payroll')
+                ->icon('heroicon-o-x-circle')
+                ->color('danger')
+                ->requiresConfirmation()
+                ->visible(fn (Payroll $record) => $record->status === 'Pending')
+                ->action(function (Payroll $record) {
+                    $record->update(['status' => 'Rejected']);
+                    Notification::make()->title('Payroll rejected.')->success()->send();
+                }),
             Actions\Action::make('nextStep')
                 ->tooltip('Proceed to next step')
                 ->icon('heroicon-o-forward')
                 ->color('cyan')
                 ->label(fn (Payroll $record) => $this->getNextStepLabel($record))
-                ->visible(fn (Payroll $record) => $record->status !== 'Paid')
+                ->visible(fn (Payroll $record) => in_array($record->status, ['Pending', 'Approved']))
                 ->action(fn (Payroll $record) => $this->toggleStatus($record)),
         ];
     }

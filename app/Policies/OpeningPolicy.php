@@ -11,11 +11,13 @@ class OpeningPolicy
     use HandlesAuthorization;
 
     /**
-     * Determine whether the user can view any models.
+     * Determine whether the user can view the list of models.
      */
-    /**
-     * Determine whether the user can view the model.
-     */
+    public function viewAny(User $user): bool
+    {
+        return $user->can('view_any_opening');
+    }
+
     /**
      * Determine whether the user can create models.
      */

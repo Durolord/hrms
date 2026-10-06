@@ -147,7 +147,11 @@ class PayrollResource extends Resource implements HasShieldPermissions
                                 Infolists\Components\TextEntry::make('status')
                                     ->label('Payroll Status')
                                     ->badge()
-                                    ->color(fn ($state) => $state === 'Paid' ? 'success' : 'warning'),
+                                    ->color(fn ($state) => match ($state) {
+                                        'Paid' => 'success',
+                                        'Rejected' => 'danger',
+                                        default => 'warning',
+                                    }),
                             ])->columns(['md' => 2]),
                     ]),
             ]);
@@ -263,6 +267,7 @@ class PayrollResource extends Resource implements HasShieldPermissions
                         'Pending' => 'Pending',
                         'Approved' => 'Approved',
                         'Paid' => 'Paid',
+                        'Rejected' => 'Rejected',
                     ])
                     ->query(fn (Builder $query, array $data) => $data['value'] ? $query->where('status', $data['value']) : $query
                     ),
@@ -324,7 +329,7 @@ class PayrollResource extends Resource implements HasShieldPermissions
                     ->icon('heroicon-o-arrow-down-tray')
                     ->url(fn ($record) => route('payroll.download-pdf', $record))
                     ->openUrlInNewTab()
-                    ->visible(fn (Payroll $record) => $record->status != 'Pending'),
+                    ->visible(fn (Payroll $record) => in_array($record->status, ['Approved', 'Paid'])),
             ])
             ->bulkActions([
                 Tables\Actions\ExportBulkAction::make()

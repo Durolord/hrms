@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Auth;
 
 class MyPayrolls extends BaseWidget
 {
+    protected static ?int $sort = 7;
+
     protected int|string|array $columnSpan = 'full';
 
     public function table(Table $table): Table

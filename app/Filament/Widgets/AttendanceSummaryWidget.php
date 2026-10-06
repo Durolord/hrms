@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 
 class AttendanceSummaryWidget extends BaseWidget
 {
+    protected static ?int $sort = 2;
+
     use HasWidgetShield;
 
     protected ?string $heading = 'Attendance Summary';

@@ -86,7 +86,7 @@ class ShowOpening extends Page implements HasForms, HasInfolists
                                     ->bulleted()
                                     ->label('Skills')
                                     ->columns(1)
-                                    ->hidden(fn ($record) => $record->qualifications->isEmpty()),
+                                    ->hidden(fn ($record) => $record->skills->isEmpty()),
                                 Infolists\Components\TextEntry::make('qualifications.description')
                                     ->listWithLineBreaks()
                                     ->bulleted()

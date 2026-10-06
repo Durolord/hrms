@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Auth;
 
 class EmployeeDistributionWidget extends BarChartWidget
 {
+    protected static ?int $sort = 4;
+
     use HasWidgetShield;
 
     protected static ?string $heading = 'Employee Distribution by Department';

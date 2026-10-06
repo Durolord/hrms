@@ -10,6 +10,7 @@ use Filament\Support\Components\Component;
 use Filament\Support\Facades\FilamentColor;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Filters\BaseFilter;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
@@ -42,6 +43,15 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureCommands();
         $this->translatableComponents();
+        Table::configureUsing(fn (Table $table) => $table
+            ->striped()
+            ->persistFiltersInSession()
+            ->persistSearchInSession()
+            ->persistSortInSession()
+            ->paginated([10, 25, 50, 100])
+            ->defaultPaginationPageOption(25)
+            ->deferLoading()
+            ->extremePaginationLinks());
         FilamentColor::register([
             'red' => Color::Red,
             'orange' => Color::Orange,

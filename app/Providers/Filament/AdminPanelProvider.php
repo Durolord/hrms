@@ -14,6 +14,7 @@ use Filament\Navigation\NavigationGroup;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Enums\MaxWidth;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -39,6 +40,12 @@ class AdminPanelProvider extends PanelProvider
             ->databaseNotifications()
             ->profile(Profile::class, false)
             ->viteTheme('resources/css/filament/admin/theme.css')
+            ->brandName('HRMS')
+            ->font('Inter')
+            ->maxContentWidth(MaxWidth::Full)
+            ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
+            ->globalSearchDebounce('300ms')
+            ->unsavedChangesAlerts()
             ->colors([
                 'primary' => Color::Blue,
             ])

@@ -28,3 +28,75 @@ body.dark .fi-body::before,
 .dark .fi-body::before {
     background: rgba(5, 10, 25, 0.8); /* Deeper, more muted overlay for dark mode */
 }
+
+/* Frosted glass chrome so text stays readable over the photo */
+.fi-topbar > nav,
+.fi-sidebar-header,
+.fi-sidebar-nav {
+    background-color: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(12px);
+}
+
+.dark .fi-topbar > nav,
+.dark .fi-sidebar-header,
+.dark .fi-sidebar-nav {
+    background-color: rgba(10, 15, 30, 0.8);
+}
+
+.fi-sidebar {
+    background-color: transparent;
+}
+
+/* Cards: slightly translucent with soft depth */
+.fi-section,
+.fi-ta-ctn,
+.fi-wi-stats-overview-stat,
+.fi-wi-chart,
+.fi-fo-wizard,
+.fi-in-section {
+    backdrop-filter: blur(6px);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.08), 0 8px 24px -12px rgb(0 0 0 / 0.15);
+}
+
+.fi-wi-stats-overview-stat {
+    transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.fi-wi-stats-overview-stat:hover {
+    transform: translateY(-2px);
+}
+
+/* Page header (breadcrumbs, title, actions) on a frosted pill */
+.fi-header {
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.08);
+}
+
+.dark .fi-header {
+    background-color: rgba(10, 15, 30, 0.75);
+}
+
+.fi-header-heading {
+    color: rgb(17 24 39);
+}
+
+.dark .fi-header-heading {
+    color: white;
+}
+
+.fi-header-subheading {
+    color: rgb(55 65 81);
+}
+
+.dark .fi-header-subheading {
+    color: rgb(209 213 219);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fi-wi-stats-overview-stat {
+        transition: none;
+    }
+}

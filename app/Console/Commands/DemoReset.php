@@ -20,7 +20,10 @@ class DemoReset extends Command
             return self::FAILURE;
         }
 
-        Storage::disk('public')->deleteDirectory('applicants');
+        foreach (['cvs', 'avatars', 'applicants'] as $directory) {
+            Storage::disk('public')->deleteDirectory($directory);
+            Storage::disk('local')->deleteDirectory($directory);
+        }
         Artisan::call('migrate:fresh', ['--seed' => true, '--force' => true]);
         $this->info('Demo data reset.');
 

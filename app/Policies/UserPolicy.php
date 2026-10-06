@@ -30,7 +30,7 @@ class UserPolicy
      */
     public function update(User $user): bool
     {
-        return $user->can('update_user');
+        return ! config('app.demo') && $user->can('update_user');
     }
 
     /**
@@ -38,7 +38,7 @@ class UserPolicy
      */
     public function delete(User $user): bool
     {
-        return $user->can('delete_user');
+        return ! config('app.demo') && $user->can('delete_user');
     }
 
     /**
@@ -46,7 +46,7 @@ class UserPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_user');
+        return ! config('app.demo') && $user->can('delete_any_user');
     }
 
     /**

@@ -28,11 +28,11 @@ class Profile extends EditProfile
                 ->inlineLabel(false)
                 ->schema([
                     $this->getNameFormComponent(),
-                    $this->getEmailFormComponent(),
-                    $passwordComponent->suffixActions([
+                    $this->getEmailFormComponent()->disabled(config('app.demo')),
+                    $passwordComponent->disabled(config('app.demo'))->suffixActions([
                         GeneratePasswordAction::make(),
                     ]),
-                    $this->getPasswordConfirmationFormComponent(),
+                    $this->getPasswordConfirmationFormComponent()->disabled(config('app.demo')),
                 ]),
         ]);
     }

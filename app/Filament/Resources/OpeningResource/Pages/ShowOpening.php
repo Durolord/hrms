@@ -17,6 +17,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Actions\Action;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
 use Filament\Resources\Pages\Page;
+use Illuminate\Support\Facades\RateLimiter;
 
 class ShowOpening extends Page implements HasForms, HasInfolists
 {
@@ -138,6 +139,7 @@ class ShowOpening extends Page implements HasForms, HasInfolists
                     FileUpload::make('cv')
                         ->directory('cvs')
                         ->acceptedFileTypes(['application/pdf'])
+                        ->maxSize(2048)
                         ->required(),
                     Select::make('job_status')
                         ->label('Job Status')
@@ -154,6 +156,18 @@ class ShowOpening extends Page implements HasForms, HasInfolists
 
     protected function submitApplication(array $data): void
     {
+        $throttleKey = 'job-apply:'.request()->ip();
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            Notification::make()
+                ->title('Too many applications')
+                ->body('Please try again later.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+        RateLimiter::hit($throttleKey, 3600);
+
         $exists = Applicant::where('email', $data['email'])
             ->where('opening_id', $this->record->id)
             ->exists();

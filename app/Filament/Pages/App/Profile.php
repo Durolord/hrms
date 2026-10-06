@@ -5,6 +5,7 @@ namespace App\Filament\Pages\App;
 use App\Filament\Actions\GeneratePasswordAction;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Pages\Auth\EditProfile;
 
@@ -33,6 +34,12 @@ class Profile extends EditProfile
                         GeneratePasswordAction::make(),
                     ]),
                     $this->getPasswordConfirmationFormComponent()->disabled(config('app.demo')),
+                ]),
+            Section::make('Notifications')
+                ->schema([
+                    Toggle::make('email_notifications')
+                        ->label('Email me about approvals, payslips and reminders')
+                        ->helperText('In-app notifications are always delivered.'),
                 ]),
         ]);
     }

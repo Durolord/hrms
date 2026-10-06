@@ -4,11 +4,15 @@ namespace App\Notifications;
 
 use Filament\Notifications\Actions\Action;
 use Filament\Notifications\Notification;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification as LaravelNotification;
 
-class UserNotification extends LaravelNotification
+class UserNotification extends LaravelNotification implements ShouldQueue
 {
+    use Queueable;
+
     public function __construct(
         public string $title,
         public string $message,
@@ -20,7 +24,8 @@ class UserNotification extends LaravelNotification
     public function via($notifiable): array
     {
         $via = [];
-        if (in_array('email', $this->channels)) {
+        $optedOut = method_exists($notifiable, 'wantsEmailNotifications') && ! $notifiable->wantsEmailNotifications();
+        if (in_array('email', $this->channels) && ! $optedOut) {
             $via[] = 'mail';
         }
         $via[] = 'database';

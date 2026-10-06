@@ -10,6 +10,7 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Form;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\ActionSize;
 use Filament\Tables;
@@ -68,10 +69,18 @@ class ApplicantResource extends Resource implements HasShieldPermissions
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'Applied' => 'primary',
-                        'interviewed' => 'warning',
+                        'Interviewed', 'Shortlisted' => 'warning',
                         'Hired' => 'success',
                         'Rejected' => 'danger',
+                        default => 'gray',
                     }),
+                Infolists\Components\TextEntry::make('interview_at')
+                    ->label('Interview')
+                    ->dateTime()
+                    ->placeholder('Not scheduled'),
+                Infolists\Components\TextEntry::make('interview_location')
+                    ->label('Interview location')
+                    ->placeholder('-'),
                 Infolists\Components\TextEntry::make('opening.title'),
                 Infolists\Components\TextEntry::make('applied_at')->date(),
             ]);
@@ -146,6 +155,30 @@ class ApplicantResource extends Resource implements HasShieldPermissions
                             $record->moveToNextStage();
                         })
                         ->visible(fn ($record): bool => auth()->user()->can('moveStage_applicant') && in_array($record->status, ['Applied', 'Interviewed', 'Shortlisted'])
+                        ),
+                    Tables\Actions\Action::make('schedule_interview')
+                        ->label('Schedule Interview')
+                        ->color('warning')
+                        ->icon('heroicon-o-calendar')
+                        ->form([
+                            Forms\Components\DateTimePicker::make('interview_at')
+                                ->label('Date and time')
+                                ->minDate(now())
+                                ->seconds(false)
+                                ->required(),
+                            Forms\Components\TextInput::make('interview_location')
+                                ->label('Location or meeting link')
+                                ->maxLength(255),
+                        ])
+                        ->fillForm(fn (Applicant $record) => [
+                            'interview_at' => $record->interview_at,
+                            'interview_location' => $record->interview_location,
+                        ])
+                        ->action(function (Applicant $record, array $data) {
+                            $record->scheduleInterview(\Carbon\Carbon::parse($data['interview_at']), $data['interview_location'] ?? null);
+                            Notification::make()->title('Interview scheduled and the applicant has been emailed.')->success()->send();
+                        })
+                        ->visible(fn ($record): bool => auth()->user()->can('scheduleInterview_applicant') && in_array($record->status, ['Applied', 'Interviewed', 'Shortlisted'])
                         ),
                     Tables\Actions\Action::make('reject')
                         ->color('danger')

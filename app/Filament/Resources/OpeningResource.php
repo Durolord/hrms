@@ -178,7 +178,7 @@ class OpeningResource extends Resource implements HasShieldPermissions
             ])
             ->modifyQueryUsing(function (Builder $query) {
                 if (! auth()->user()->can('view_outside_branch_employee')) {
-                    return $query->where('branch_id', auth()->user()->employee->branch->id);
+                    return $query->where('branch_id', auth()->user()->employee?->branch?->id);
                 }
             })
             ->filters([

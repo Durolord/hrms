@@ -11,21 +11,21 @@ class LeaveCalendarWidget extends FullCalendarWidget
 {
     public function fetchEvents(array $fetchInfo): array
     {
-        $query = Leave::query();
+        $query = Leave::query()->select('leaves.*');
         $user = auth()->user();
         $employee = $user->employee;
         if (! $user->can('view_non_managed_leave')) {
             if ($user->can('view_outside_branch_employee')) {
                 $query->join('employees', 'leaves.employee_id', '=', 'employees.id')
-                    ->where('employees.manager_id', $employee->id);
+                    ->where('employees.manager_id', $employee?->id);
             } else {
                 $query->join('employees', 'leaves.employee_id', '=', 'employees.id')
-                    ->where('employees.branch_id', $employee->branch->id)
-                    ->where('employees.manager_id', $employee->id);
+                    ->where('employees.branch_id', $employee?->branch?->id)
+                    ->where('employees.manager_id', $employee?->id);
             }
         } elseif (! $user->can('view_outside_branch_employee')) {
             $query->join('employees', 'leaves.employee_id', '=', 'employees.id')
-                ->where('employees.branch_id', $employee->branch->id);
+                ->where('employees.branch_id', $employee?->branch?->id);
         }
 
         return $query

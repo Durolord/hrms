@@ -1,5 +1,6 @@
 <?php
 namespace App\Models;
+use App\Notifications\PayslipReady;
 use App\Notifications\UserNotification;
 use App\Traits\HasSettingsAttributes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,12 +14,16 @@ class Payroll extends Model
         'employee_id' => 'int',
         'month' => 'datetime:Y-m',
         'basic_salary' => 'float',
+        'approved_at' => 'datetime',
+        'paid_at' => 'datetime',
     ];
     protected $fillable = [
         'employee_id',
         'month',
         'basic_salary',
         'status',
+        'approved_at',
+        'paid_at',
     ];
     protected static function boot()
     {
@@ -70,15 +75,15 @@ class Payroll extends Model
     }
     public function getTotalBonusesAttribute(): float
     {
-        return $this->bonuses->sum('amount');
+        return (float) ($this->isFrozen() ? $this->current_bonuses : $this->bonuses)->sum('amount');
     }
     public function getTotalAllowancesAttribute(): float
     {
-        return $this->allowances->sum('amount');
+        return (float) ($this->isFrozen() ? $this->current_allowances : $this->allowances)->sum('amount');
     }
     public function getTotalDeductionsAttribute(): float
     {
-        return $this->deductions->sum('amount');
+        return (float) ($this->isFrozen() ? $this->current_deductions : $this->deductions)->sum('amount');
     }
     public function getNetSalaryAttribute(): float
     {
@@ -86,7 +91,31 @@ class Payroll extends Model
     }
     public function getTotalEarningsAttribute(): float
     {
-        return $this->basic_salary + $this->total_allowances + $this->bonuses;
+        return $this->basic_salary + $this->total_allowances + $this->total_bonuses;
+    }
+    /**
+     * Once a payroll leaves Pending its figures come from the frozen snapshots, so later edits to pay scales,
+     * allowances or deductions cannot change a payslip that was already approved or paid.
+     */
+    public function isFrozen(): bool
+    {
+        return $this->status !== 'Pending';
+    }
+    public function previousPayroll(): ?self
+    {
+        return self::where('employee_id', $this->employee_id)
+            ->where('month', '<', $this->month->copy()->startOfMonth())
+            ->orderByDesc('month')
+            ->first();
+    }
+    public function markApproved(): void
+    {
+        $this->update(['status' => 'Approved', 'approved_at' => now()]);
+        $this->employee->user?->notify(new PayslipReady($this));
+    }
+    public function markPaid(): void
+    {
+        $this->update(['status' => 'Paid', 'paid_at' => now()]);
     }
     public function totalDeductions(): float
     {

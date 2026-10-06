@@ -54,7 +54,7 @@ class AttendanceResource extends Resource implements HasShieldPermissions
                         titleAttribute: 'name',
                         modifyQueryUsing: fn (Builder $query) => auth()->user()->can('view_outside_branch_employee')
                             ? $query
-                            : $query->where('branch_id', auth()->user()->employee->branch->id),
+                            : $query->where('branch_id', auth()->user()->employee?->branch?->id),
                     )
                     ->searchable(['name', 'email'])
                     ->required(),

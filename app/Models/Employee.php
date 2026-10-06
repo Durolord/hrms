@@ -160,16 +160,22 @@ class Employee extends Model implements HasMedia
             'employee_id'
         )->where('department_heads.department_id', $this->department_id);
     }
-    public function totalLeaveDaysTaken(?int $leaveTypeId = null, ?int $year = null): int
+    public function totalLeaveDaysTaken(?int $leaveTypeId = null, ?int $year = null, array $statuses = ['Approved']): float
     {
         $year = $year ?? now()->year;
         $query = $this->leaves()
-            ->where('status', 'Approved')
+            ->whereIn('status', $statuses)
             ->whereYear('start_date', $year);
         if ($leaveTypeId) {
             $query->where('leave_type_id', $leaveTypeId);
         }
-        return $query->get()->sum(fn ($leave) => Carbon::parse($leave->start_date)->diffInDays(Carbon::parse($leave->end_date)) + 1);
+        return $query->get()->sum(fn ($leave) => $leave->workingDays());
+    }
+    public function leaveBalanceFor(?LeaveType $leaveType, ?int $year = null): float
+    {
+        $total = $leaveType->max_days ?? 30;
+        $used = $this->totalLeaveDaysTaken($leaveType?->id, $year, ['Approved', 'Pending']);
+        return max($total - $used, 0);
     }
     public static function addSalaryAdjustment(array $data, $id): void
     {

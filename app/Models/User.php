@@ -11,6 +11,7 @@ class User extends Authenticatable implements FilamentUser
     use HasFactory, HasRoles, Notifiable;
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'email_notifications' => 'bool',
     ];
     protected $hidden = [
         'password',
@@ -20,10 +21,15 @@ class User extends Authenticatable implements FilamentUser
         'name',
         'email',
         'password',
+        'email_notifications',
     ];
     protected function getDefaultGuardName(): string
     {
         return 'web';
+    }
+    public function wantsEmailNotifications(): bool
+    {
+        return $this->email_notifications ?? true;
     }
     public function routeNotificationForMail(): string
     {

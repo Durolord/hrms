@@ -39,7 +39,7 @@ class GeneratePayrollsAction extends Action
     {
         $employees = Employee::where('active', true);
         if (! auth()->user()->can('view_outside_branch_employee')) {
-            $employees->where('branch_id', auth()->user()->employee->branch->id);
+            $employees->where('branch_id', auth()->user()->employee?->branch?->id);
         }
         $employees = $employees->get();
         $bulkAction = Config::bulkActionModel()::query()->create([

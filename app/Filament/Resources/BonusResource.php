@@ -45,7 +45,7 @@ class BonusResource extends Resource implements HasShieldPermissions
                         titleAttribute: 'name',
                         modifyQueryUsing: fn (Builder $query) => auth()->user()->can('view_outside_branch_employee')
                             ? $query
-                            : $query->where('branch_id', auth()->user()->employee->branch->id),
+                            : $query->where('branch_id', auth()->user()->employee?->branch?->id),
                     )
                     ->searchable()
                     ->required(),
@@ -102,8 +102,8 @@ class BonusResource extends Resource implements HasShieldPermissions
             ])
             ->modifyQueryUsing(function (Builder $query) {
                 if (! auth()->user()->can('view_outside_branch_employee')) {
-                    return $query->join('employees', 'bonuses.employee_id', '=', 'employees.id')
-                        ->where('employees.branch_id', auth()->user()->employee->branch->id);
+                    return $query->select('bonuses.*')->join('employees', 'bonuses.employee_id', '=', 'employees.id')
+                        ->where('employees.branch_id', auth()->user()->employee?->branch?->id);
                 }
             })
             ->filters([

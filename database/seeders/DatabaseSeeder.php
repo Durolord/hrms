@@ -10,6 +10,8 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             ShieldSeeder::class,
+            ExtraPermissionsSeeder::class,
+            HolidaySeeder::class,
             UserSeeder::class,
             DepartmentSeeder::class,
             BranchSeeder::class,

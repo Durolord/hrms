@@ -180,7 +180,7 @@ class ShowOpening extends Page implements HasForms, HasInfolists
 
             return;
         }
-        Applicant::create([
+        $applicant = Applicant::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'phone' => $data['phone'],
@@ -189,6 +189,7 @@ class ShowOpening extends Page implements HasForms, HasInfolists
             'job_status' => $data['job_status'],
             'opening_id' => $this->record->id,
         ]);
+        $applicant->sendConfirmation();
         Notification::make()
             ->title('Application Submitted')
             ->body('Thank you for applying! Our team will review your application.')

@@ -75,6 +75,10 @@ class AdminPanelProvider extends PanelProvider
                 \App\Filament\Pages\Dashboard::class,
             ])
             ->widgets([
+                Widgets\PendingApprovalsWidget::class,
+                Widgets\MyLeaveBalanceWidget::class,
+                Widgets\WhosOutWidget::class,
+                Widgets\AnniversariesWidget::class,
                 Widgets\MyAttendance::class,
                 Widgets\MyLeaves::class,
                 Widgets\MyPayrolls::class,

@@ -53,7 +53,7 @@ class AdminPanelProvider extends PanelProvider
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->brandName('HRMS')
             ->brandLogo(fn (): View => view('components.brand-logo'))
-            ->brandLogoHeight('2.25rem')
+            ->brandLogoHeight('4.5rem')
             ->font('Inter')
             ->maxContentWidth(MaxWidth::Full)
             ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
@@ -122,7 +122,8 @@ class AdminPanelProvider extends PanelProvider
             )
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
-                fn (): string => Demo::enabled() ? '<meta name="robots" content="noindex, nofollow">' : '',
+                fn (): string => (Demo::enabled() ? '<meta name="robots" content="noindex, nofollow">' : '')
+                    .'<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap" rel="stylesheet">',
             )
             ->renderHook(
                 PanelsRenderHook::BODY_START,

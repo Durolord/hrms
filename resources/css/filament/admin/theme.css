@@ -14,10 +14,10 @@
     z-index: 0;
 }
 
-/* Wordmark beside the seal: forged gold in light mode, glowing chrome in dark mode. Same size everywhere. */
+/* Wordmark beside the seal: forged gold in light mode, glowing chrome in dark mode. Sized for the navbar/sidebar. */
 .hrms-wordmark {
     font-family: 'Cinzel', Georgia, 'Times New Roman', serif;
-    font-size: 1.875rem;
+    font-size: 1.25rem;
     font-weight: 700;
     letter-spacing: 0.06em;
     line-height: 1;
@@ -31,6 +31,15 @@
 .dark .hrms-wordmark {
     background-image: linear-gradient(135deg, #ffffff 0%, #9aa7b8 45%, #eef3f8 70%, #7d8a9c 100%);
     filter: drop-shadow(0 0 4px rgba(143, 208, 255, 0.45));
+}
+
+/* Larger brand on the login and other simple pages. */
+.fi-simple-header .fi-logo {
+    height: 4.5rem !important;
+}
+
+.fi-simple-header .hrms-wordmark {
+    font-size: 1.875rem;
 }
 
 /* Overlay */

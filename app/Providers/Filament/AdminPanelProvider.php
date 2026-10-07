@@ -53,7 +53,7 @@ class AdminPanelProvider extends PanelProvider
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->brandName('HRMS')
             ->brandLogo(fn (): View => view('components.brand-logo'))
-            ->brandLogoHeight('4.5rem')
+            ->brandLogoHeight('2.5rem')
             ->font('Inter')
             ->maxContentWidth(MaxWidth::Full)
             ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
